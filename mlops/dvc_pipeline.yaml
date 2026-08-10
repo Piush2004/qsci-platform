@@ -1,0 +1,34 @@
+stages:
+  extract_features:
+    cmd: python -m ai_engine.pipeline.feature_store
+    deps:
+      - data/raw/historical_sales.csv
+      - ai_engine/pipeline/feature_store.py
+    outs:
+      - data/processed/features_v1.parquet
+
+  train_baseline_tft:
+    cmd: python -m ai_engine.pipeline.train --model tft
+    deps:
+      - data/processed/features_v1.parquet
+      - ai_engine/models/tft_forecaster.py
+    metrics:
+      - metrics/tft_eval.json:
+          cache: false
+
+  train_quantum_vqr:
+    cmd: python -m ai_engine.pipeline.train --model vqr
+    deps:
+      - data/processed/features_v1.parquet
+      - ai_engine/quantum/vqr_forecaster.py
+    metrics:
+      - metrics/vqr_eval.json:
+          cache: false
+
+  evaluate_champion:
+    cmd: python -m mlops.champion_challenger
+    deps:
+      - metrics/tft_eval.json
+      - metrics/vqr_eval.json
+    outs:
+      - models/champion_model.pkl

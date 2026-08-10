@@ -1,0 +1,52 @@
+[
+  {
+    "log_entry": "{\"model\": \"Naive\", \"confidence\": 0.420, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191542Z\"}",
+    "audit_hash": "4e69e04cfd61472579e540611df0cadddf93276952974a5a8f92639f1d859a30",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"MovingAverage\", \"confidence\": 0.420, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191681Z\"}",
+    "audit_hash": "f9bba235aeb00282a732bdefd196182c47c317b374e6d3befe25d63f2f367be6",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"LightGBM\", \"confidence\": 0.420, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191767Z\"}",
+    "audit_hash": "2d4da866e8307c53b064c90fe6cc8ff1ed10c4b41c2abdd8447c43f25823d1de",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"Naive\", \"confidence\": 0.878, \"action\": \"APPROVE\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191838Z\"}",
+    "audit_hash": "9e271a13c4e782b5a179bb3398313bc15c6eb32688025e3b5296d31d67ab679f",
+    "action": "APPROVE"
+  },
+  {
+    "log_entry": "{\"model\": \"MovingAverage\", \"confidence\": 0.851, \"action\": \"APPROVE\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191904Z\"}",
+    "audit_hash": "353022ea2e5fd7d086cf870990959c7c6eadec440aa2b95f4cab660a1eeb8cc9",
+    "action": "APPROVE"
+  },
+  {
+    "log_entry": "{\"model\": \"LightGBM\", \"confidence\": 0.792, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.191966Z\"}",
+    "audit_hash": "7f82976ea838de5ada236a431426b86b14de403bc9994ff8fdcc2407141b545e",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"VQR (Ideal)\", \"confidence\": 0.420, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.192029Z\"}",
+    "audit_hash": "9fbcb2b47bfafee724f72a2e6857ca653f7ff06a9a0f9be0ce2a87118a294a34",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"VQR (Noisy 1%)\", \"confidence\": 0.420, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.192089Z\"}",
+    "audit_hash": "bfaf1eca2dc73e6de25607039cf78f632a769fad95b4dcee331198aa7593d454",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"VQR (Ideal)\", \"confidence\": 0.645, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.192145Z\"}",
+    "audit_hash": "97f42e46b05c1e93ab5c21f99a033e5fe3e6b4898fecc585a145cb427ced3710",
+    "action": "MODIFY"
+  },
+  {
+    "log_entry": "{\"model\": \"VQR (Noisy 1%)\", \"confidence\": 0.673, \"action\": \"MODIFY\", \"user\": \"SIMULATED_PLANNER_DECISION\", \"timestamp\": \"2026-08-09T15:28:57.192208Z\"}",
+    "audit_hash": "5fe750b5fb3e366a28d13b6afb2d7598f6da3393a66aa5aae960502658ac95f1",
+    "action": "MODIFY"
+  }
+]
