@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-900: #0A0F1C;
+  --color-navy-800: #111827;
+  --color-navy-700: #1F2937;
+  
+  --color-cyan-500: #06B6D4;
+  --color-cyan-300: #67E8F9;
+  --color-cyan-900-20: rgba(6, 182, 212, 0.2);
+  
+  --color-violet-500: #8B5CF6;
+  --color-violet-300: #C4B5FD;
+  
+  --color-slate-50: #F8FAFC;
+  --color-slate-300: #CBD5E1;
+  --color-slate-500: #64748B;
+}
+
+@layer base {
+  :root {
+    --background: #0A0F1C;
+    --foreground: #F8FAFC;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* UX Modes */
+.mode-marketing {
+  /* Spacious, large typography */
+}
+.mode-decision {
+  /* High info density, fast navigation */
+}
+.mode-research {
+  /* Technical, scientific, dense, monospace heavy */
+  font-family: 'JetBrains Mono', monospace;
+}
+.mode-infrastructure {
+  /* Functional, structured, clear system info */
+}
+
+/* Surface Cards */
+.qsci-card {
+  background-color: var(--color-navy-800);
+  border: 1px solid var(--color-navy-700);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.qsci-card--ai-insight {
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+}
+
+.glass-card {
+  background-color: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
