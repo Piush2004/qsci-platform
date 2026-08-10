@@ -1,6 +1,6 @@
 'use client';
 
-import React, from 'react';
+import React from 'react';
 import { 
   Database, Activity, TrendingUp, AlertTriangle, GitPullRequest, 
   Settings, DollarSign, Percent, CheckCircle, UserCheck, Search, History 
