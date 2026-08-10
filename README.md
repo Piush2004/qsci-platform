@@ -69,11 +69,11 @@ The platform follows a decoupled, hybrid architecture:
 
 ```mermaid
 graph TD;
-    A[Next.js Client Front-End] --> B[FastAPI Gateway]
-    B --> C[Predictive Engine (Time-Series)]
-    B --> D[Optimization Engine (Classical Heuristics)]
-    B --> E[Quantum Research Lab (Qiskit)]
-    C --> F[(TimescaleDB / PostgreSQL)]
+    A["Next.js Client Front-End"] --> B["FastAPI Gateway"]
+    B --> C["Predictive Engine (Time-Series)"]
+    B --> D["Optimization Engine (Classical Heuristics)"]
+    B --> E["Quantum Research Lab (Qiskit)"]
+    C --> F[("TimescaleDB / PostgreSQL")]
     D --> F
     E --> F
 ```
