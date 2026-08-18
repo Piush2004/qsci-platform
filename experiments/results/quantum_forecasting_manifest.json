@@ -1,0 +1,37 @@
+{
+  "dataset": "m5-forecasting-accuracy-evaluation",
+  "dataset_version": "m5-forecasting-accuracy-evaluation",
+  "series_id": "FOODS_3_090_CA_1_evaluation",
+  "train_start": "2016-04-21",
+  "train_end": "2016-05-08",
+  "test_start": "2016-05-09",
+  "test_end": "2016-05-22",
+  "forecast_horizon": 14,
+  "seed": 42,
+  "classical_feature_columns": [
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_28",
+    "rollmean_7",
+    "rollstd_7",
+    "rollmean_28",
+    "rollstd_28",
+    "dow",
+    "day",
+    "month",
+    "is_weekend"
+  ],
+  "software_versions": {
+    "qiskit": "2.5.2",
+    "qiskit_machine_learning": "0.9.0",
+    "qiskit_aer": "0.17.2",
+    "lightgbm": "4.7.0",
+    "sklearn": "1.9.0",
+    "numpy": "2.5.2",
+    "pandas": "2.3.3"
+  },
+  "hardware": "Windows AMD64, AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+  "simulator": "qiskit_aer.AerSimulator(method=statevector)",
+  "git_commit": "0fbeac6a10fffdad02892249ff0f0fca06636dfd"
+}
