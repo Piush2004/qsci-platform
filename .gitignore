@@ -1,5 +1,29 @@
-﻿*.pyc
+.venv/
 __pycache__/
-*.db
-node_modules/
-.next/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
+
+# data (large / downloaded, not committed)
+data/raw/
+data/processed/
+
+# mlflow local tracking store
+mlruns/
+experiments/mlruns/
+experiments/artifacts/
+
+# credentials
+.env
+kaggle.json
+
+# node / frontend
+frontend/node_modules/
+frontend/.next/
+
+# OS
+.DS_Store
+Thumbs.db
