@@ -16,6 +16,9 @@ mlruns/
 experiments/mlruns/
 experiments/artifacts/
 
+# local dev/demo databases (reproducible by re-running notebooks)
+*.db
+
 # credentials
 .env
 kaggle.json
