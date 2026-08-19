@@ -1,0 +1,32 @@
+{
+  "notebook": "notebooks/07_classical_vs_quantum_comparison.ipynb",
+  "git_commit": "ba2b69c6d33e576eff19716195b8be33b7fb9748",
+  "hardware": "Windows AMD64, AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+  "global_seed": 42,
+  "package_versions": {
+    "Python": "3.14.5",
+    "NumPy": "2.5.2",
+    "Pandas": "2.3.3",
+    "SciPy": "1.18.0",
+    "Scikit-learn": "1.9.0",
+    "LightGBM": "4.7.0",
+    "Statsmodels": "0.14.6",
+    "Qiskit": "2.5.2",
+    "Qiskit Aer": "0.17.2",
+    "Qiskit Machine Learning": "0.9.0",
+    "Qiskit Optimization": "0.7.0",
+    "Qiskit Algorithms": "0.4.0",
+    "dimod": "0.12.22",
+    "OR-Tools": "9.15.6755",
+    "MLflow": "3.15.1"
+  },
+  "source_files": {
+    "forecasting_leakage_corrected": "experiments/results/phase2_1_leakage_free_results.json",
+    "forecasting_original_flawed": "experiments/results/quantum_forecasting_results.json",
+    "routing_results": "experiments/results/routing_results.json",
+    "routing_penalty_sensitivity": "experiments/results/routing_penalty_sensitivity.json"
+  },
+  "n_unified_result_rows": 84,
+  "n_publication_tables": 8,
+  "n_figures": 10
+}

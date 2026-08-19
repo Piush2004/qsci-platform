@@ -1,0 +1,14 @@
+solver_label,stops,n_feasible,n_runs,feasibility_rate_pct
+OR-Tools (on QUBO),4,1,1,100.0
+OR-Tools (on QUBO),6,1,1,100.0
+OR-Tools (on QUBO),8,1,1,100.0
+OR-Tools (on QUBO),10,1,1,100.0
+OR-Tools (on QUBO),12,1,1,100.0
+OR-Tools (on QUBO),16,1,1,100.0
+QAOA,4,8,10,80.0
+Simulated Annealing,4,10,10,100.0
+Simulated Annealing,6,10,10,100.0
+Simulated Annealing,8,9,10,90.0
+Simulated Annealing,10,1,10,10.0
+Simulated Annealing,12,0,10,0.0
+Simulated Annealing,16,0,10,0.0

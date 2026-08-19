@@ -1,0 +1,4 @@
+N,qubits,depth,gates,optimizer_iters,train_time_s,wmape_corrected
+4,4,22,37,10,1.3,34.89
+8,8,50,123,18,9.53,31.06
+12,12,78,257,26,291.56,32.08

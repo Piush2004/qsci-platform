@@ -1,0 +1,12 @@
+solver_label,stops,n_feasible,best_cost,mean_cost,std_cost,best_gap_pct
+OR-Tools (on QUBO),4,1,380.008,380.008,,0.0
+OR-Tools (on QUBO),6,1,519.633,519.633,,0.0
+OR-Tools (on QUBO),8,1,643.5,643.5,,0.0
+OR-Tools (on QUBO),10,1,853.881,853.881,,0.0
+OR-Tools (on QUBO),12,1,1117.461,1117.461,,0.0
+OR-Tools (on QUBO),16,1,1386.378,1386.378,,0.0
+QAOA,4,8,380.008,380.008,0.0,0.0
+Simulated Annealing,4,10,380.008,380.008,0.0,0.0
+Simulated Annealing,6,10,519.633,521.073,3.037,-0.0
+Simulated Annealing,8,9,643.5,695.964,35.871,-0.0
+Simulated Annealing,10,1,859.013,859.013,,0.601

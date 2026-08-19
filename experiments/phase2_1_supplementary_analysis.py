@@ -135,18 +135,47 @@ def main():
     y_test = series_df[(series_df["date"] >= TEST_START) & (series_df["date"] <= TEST_END)]["sales"].to_numpy()
 
     print("=== 1. Leakage-free VQR re-evaluation ===")
+    leakage_free_results = []
     for n in (4, 8, 12):
         preds, model, train_time, predict_time = leakage_free_vqr_predict(n, X_train_raw, y_train, series_df)
         m = metrics_mod.summarize(y_test, preds)
         print(f"N={n}: train={train_time:.1f}s predict={predict_time:.2f}s metrics={m}")
+        leakage_free_results.append({
+            "n_qubits": n, "train_time_seconds": train_time, "predict_time_seconds": predict_time,
+            "rmse": m["rmse"], "mae": m["mae"], "wmape": m["wmape"], "bias": m["bias"],
+            "predictions": preds.tolist(),
+        })
 
     print("\n=== 2. Non-determinism check: N=4, 5 repeated runs, same seed ===")
+    nondeterminism_runs = []
     for run_i in range(5):
         preds, model, train_time, predict_time = leakage_free_vqr_predict(4, X_train_raw, y_train, series_df, seed=SEED)
         m = metrics_mod.summarize(y_test, preds)
         pred_hash = hashlib.sha256(np.round(preds, 6).tobytes()).hexdigest()[:12]
         print(f"run={run_i} seed={SEED} rmse={m['rmse']:.4f} mae={m['mae']:.4f} runtime={train_time:.2f}s hash={pred_hash}")
+        nondeterminism_runs.append({
+            "run": run_i, "seed": SEED, "rmse": m["rmse"], "mae": m["mae"],
+            "runtime_seconds": train_time, "prediction_hash": pred_hash,
+        })
+
+    results_dir = Path(__file__).resolve().parents[1] / "experiments" / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    output = {
+        "series_id": SERIES_ID, "test_start": str(TEST_START.date()), "test_end": str(TEST_END.date()),
+        "y_test": y_test.tolist(), "leakage_free_vqr": leakage_free_results,
+        "nondeterminism_check_n4": nondeterminism_runs,
+        "reference": {
+            "full_history_lightgbm_wmape": 25.559994, "seasonal_naive_wmape": 37.150466,
+            "bounded_window_lightgbm_wmape": 45.414688,
+            "note": "full_history_lightgbm and seasonal_naive are Phase 1 fold-4 values (same test window), "
+                    "bounded_window_lightgbm is Phase 2's committed value -- all cited, not recomputed here",
+        },
+    }
+    with open(results_dir / "phase2_1_leakage_free_results.json", "w") as f:
+        json.dump(output, f, indent=2, default=str)
+    print(f"\nSaved to {results_dir / 'phase2_1_leakage_free_results.json'}")
 
 
 if __name__ == "__main__":
+    import json
     main()

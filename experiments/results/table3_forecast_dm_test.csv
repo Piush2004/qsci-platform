@@ -1,0 +1,4 @@
+comparison,test,statistic,p_value,alpha,reliable,significant,interpretation
+LightGBM vs. VQR-corrected (N=4),Diebold-Mariano,1.5671,0.1411,0.05,True,False,"Fail to reject H0 at alpha=0.05: no significant accuracy difference detected (DM=1.567, p=0.1411)."
+LightGBM vs. VQR-corrected (N=8),Diebold-Mariano,1.3547,0.1986,0.05,True,False,"Fail to reject H0 at alpha=0.05: no significant accuracy difference detected (DM=1.355, p=0.1986)."
+LightGBM vs. VQR-corrected (N=12),Diebold-Mariano,1.3656,0.1952,0.05,True,False,"Fail to reject H0 at alpha=0.05: no significant accuracy difference detected (DM=1.366, p=0.1952)."
