@@ -1,6 +1,6 @@
 {
   "notebook": "notebooks/07_classical_vs_quantum_comparison.ipynb",
-  "git_commit": "ba2b69c6d33e576eff19716195b8be33b7fb9748",
+  "git_commit": "3ce92bda36b9aa23070df689ea20ce5e2b5ae7d6",
   "hardware": "Windows AMD64, AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
   "global_seed": 42,
   "package_versions": {
