@@ -5,6 +5,8 @@ Status: **PARTIAL** — covers the Golden Path surface built so far (dashboard, 
 | Location | Element | Action | Expected | Actual | API | Status | Evidence |
 |---|---|---|---|---|---|---|---|
 | `/` | "Open Decision Center" link | Navigate | Goes to `/dashboard` | Works | — | PASS | Manual click, this session |
+| TopBar (all app pages, `<lg` widths) | Hamburger menu button | Click | Opens mobile sidebar overlay with backdrop | Works — verified at 390px, screenshotted mid-open (Milestone 0) | — (client-side) | PASS | `docs/QSCI_VISUAL_QA_REPORT.md` Milestone 0 |
+| Mobile nav overlay | Backdrop click | Click | Closes the overlay | Works (Milestone 0) | — (client-side) | PASS | `docs/QSCI_VISUAL_QA_REPORT.md` Milestone 0 |
 | `/` | "Research Lab" link | Navigate | Goes to `/research` | Works | — | PASS | Manual click, this session |
 | Sidebar (all pages) | "Decision Center"/"Demand"/"Inventory"/"Research Lab" links | Navigate | Highlights active route, loads page | Works | — | PASS | Manual click, this session |
 | `/dashboard` | "Generate recommendation (LightGBM)" | Click | Runs `POST /forecast` (lightgbm) then `POST /recommend`, adds a PENDING recommendation to the list, auto-selects it | Works — verified real reorder-point/risk numbers computed from live M5 data | `/forecast`, `/recommend` | PASS (after fixing a real reorder-point unit bug found during this verification — see below) | Screenshot + backend log, this session |

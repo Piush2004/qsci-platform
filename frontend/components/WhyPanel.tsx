@@ -1,5 +1,6 @@
 import type { Recommendation } from "@/lib/api";
 import { StatusPill } from "./StatusPill";
+import { Card } from "./Card";
 
 function fmt(n: number, digits = 1) {
   return n.toLocaleString(undefined, { maximumFractionDigits: digits });
@@ -13,7 +14,7 @@ export function WhyPanel({ rec }: { rec: Recommendation }) {
   const fsIsNumber = typeof fs === "number";
 
   return (
-    <div className="space-y-5 rounded-lg border border-border bg-surface p-5">
+    <Card className="space-y-5">
       <div>
         <h3 className="text-sm font-semibold text-muted">Forecast evidence</h3>
         <p className="mt-1 text-sm">
@@ -66,7 +67,7 @@ export function WhyPanel({ rec }: { rec: Recommendation }) {
         <h3 className="text-sm font-semibold text-muted">Rationale</h3>
         <p className="mt-1 text-sm text-foreground/90">{rec.rationale}</p>
       </div>
-    </div>
+    </Card>
   );
 }
 

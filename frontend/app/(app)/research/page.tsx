@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { StatusPill } from "@/components/StatusPill";
+import { PageHeader } from "@/components/PageHeader";
+import { Card } from "@/components/Card";
 
 type Json = Record<string, unknown>;
 
 function Section({ title, status, children }: { title: string; status?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-surface p-5">
+    <Card>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="text-h3">{title}</h2>
         {status && <StatusPill label={status} />}
       </div>
       {children}
-    </section>
+    </Card>
   );
 }
 
@@ -36,13 +38,10 @@ export default function ResearchPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-xl font-semibold">Research Lab</h1>
-        <p className="text-sm text-muted">
-          Evidence, not marketing. Classical vs. quantum, across forecasting, routing, noise, and scalability
-          (Phases 2–5). No unqualified &ldquo;quantum advantage&rdquo; claim exists anywhere in this codebase.
-        </p>
-      </header>
+      <PageHeader
+        title="Research Lab"
+        description="Evidence, not marketing. Classical vs. quantum, across forecasting, routing, noise, and scalability (Phases 2–5). No unqualified “quantum advantage” claim exists anywhere in this codebase."
+      />
 
       {error && (
         <div className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>

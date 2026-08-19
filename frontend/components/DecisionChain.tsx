@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AuditEvent, Recommendation } from "@/lib/api";
 import { StatusPill } from "./StatusPill";
+import { Card } from "./Card";
 
 interface Stage {
   key: string;
@@ -109,13 +110,13 @@ export function DecisionChain({ rec, auditEvents }: { rec: Recommendation; audit
   ];
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+    <Card padded={false} className="overflow-x-auto">
       <div className="flex min-w-max divide-x divide-border">
         {stages.map((s) => (
           <button
             key={s.key}
             onClick={() => setOpen(open === s.key ? null : s.key)}
-            className={`flex flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${
+            className={`flex flex-col items-start gap-1 px-4 py-3 text-left transition-colors duration-[var(--duration-fast)] ${
               open === s.key ? "bg-accent/10" : "hover:bg-border/30"
             }`}
           >
@@ -125,10 +126,10 @@ export function DecisionChain({ rec, auditEvents }: { rec: Recommendation; audit
         ))}
       </div>
       {open && (
-        <div className="border-t border-border p-4 text-sm">
+        <div key={open} className="motion-fade-in border-t border-border p-4 text-sm">
           {stages.find((s) => s.key === open)?.detail}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

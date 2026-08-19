@@ -5,6 +5,8 @@ import { api, ApiError, type AuditEvent, type Recommendation } from "@/lib/api";
 import { DecisionChain } from "@/components/DecisionChain";
 import { WhyPanel } from "@/components/WhyPanel";
 import { StatusPill } from "@/components/StatusPill";
+import { PageHeader } from "@/components/PageHeader";
+import { Card } from "@/components/Card";
 
 export default function DashboardPage() {
   const [recs, setRecs] = useState<Recommendation[] | null>(null);
@@ -26,8 +28,17 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    api
+      .listRecommendations()
+      .then((data) => {
+        setRecs(data);
+        setError(null);
+      })
+      .catch((e) => {
+        setError(e instanceof ApiError ? `Backend error: ${e.message}` : "Backend unavailable");
+        setRecs(null);
+      });
+  }, []);
 
   useEffect(() => {
     if (selectedId == null) return;
@@ -64,19 +75,19 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Decision Center</h1>
-          <p className="text-sm text-muted">What requires your attention — not a KPI wall.</p>
-        </div>
-        <button
-          onClick={generateNew}
-          disabled={generating}
-          className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-black disabled:opacity-50"
-        >
-          {generating ? "Generating…" : "Generate recommendation (LightGBM)"}
-        </button>
-      </header>
+      <PageHeader
+        title="Decision Center"
+        description="What requires your attention — not a KPI wall."
+        action={
+          <button
+            onClick={generateNew}
+            disabled={generating}
+            className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-black transition-opacity duration-[var(--duration-fast)] disabled:opacity-50"
+          >
+            {generating ? "Generating…" : "Generate recommendation (LightGBM)"}
+          </button>
+        }
+      />
 
       {error && (
         <div className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
@@ -92,9 +103,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-2">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
-            Pending decisions ({pending.length})
-          </h2>
+          <h2 className="text-caption uppercase">Pending decisions ({pending.length})</h2>
           {recs?.map((r) => (
             <button
               key={r.id}
@@ -114,14 +123,18 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="space-y-4">
+        <div className="motion-fade-in space-y-4" key={selected?.id ?? "none"}>
           {selected ? (
             <>
               <DecisionChain rec={selected} auditEvents={auditEvents} />
               <WhyPanel rec={selected} />
               {selected.status === "PENDING" && (
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-surface p-4">
+                <Card className="flex items-center gap-2">
+                  <label htmlFor="approver-name" className="sr-only">
+                    Your name (approver)
+                  </label>
                   <input
+                    id="approver-name"
                     value={actionApprover}
                     onChange={(e) => setActionApprover(e.target.value)}
                     placeholder="Your name (approver — no auth system yet, see docs)"
@@ -130,18 +143,18 @@ export default function DashboardPage() {
                   <button
                     onClick={() => decide("approve")}
                     disabled={!actionApprover.trim()}
-                    className="rounded-md bg-live/20 px-3 py-1.5 text-sm font-medium text-live disabled:opacity-40"
+                    className="rounded-md bg-live/20 px-3 py-1.5 text-sm font-medium text-live transition-opacity duration-[var(--duration-fast)] disabled:opacity-40"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => decide("reject")}
                     disabled={!actionApprover.trim()}
-                    className="rounded-md bg-danger/20 px-3 py-1.5 text-sm font-medium text-danger disabled:opacity-40"
+                    className="rounded-md bg-danger/20 px-3 py-1.5 text-sm font-medium text-danger transition-opacity duration-[var(--duration-fast)] disabled:opacity-40"
                   >
                     Reject
                   </button>
-                </div>
+                </Card>
               )}
             </>
           ) : (

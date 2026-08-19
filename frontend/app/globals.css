@@ -30,6 +30,13 @@
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Motion tokens -- every animation in the app draws from these three
+     durations and one easing curve, never a one-off value. */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -58,6 +65,43 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Typography scale -- Display/H1/H2/H3/Body/Supporting/Caption/Data.
+   Every page header, section title, and metric value should pick one of
+   these rather than an ad hoc text-xl/text-sm class, so hierarchy stays
+   consistent as new pages are added. */
+.text-display { font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.01em; }
+.text-h1 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; letter-spacing: -0.01em; }
+.text-h2 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; }
+.text-h3 { font-size: 0.9375rem; line-height: 1.375rem; font-weight: 600; }
+.text-body { font-size: 0.875rem; line-height: 1.4rem; }
+.text-supporting { font-size: 0.8125rem; line-height: 1.25rem; color: var(--muted); }
+.text-caption { font-size: 0.6875rem; line-height: 1rem; letter-spacing: 0.02em; color: var(--muted); }
+.text-data { font-family: var(--font-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+/* Motion primitives -- used by PageHeader/Card/DecisionChain, never
+   applied ambiently. Disabled entirely under reduced-motion. */
+.motion-fade-in { animation: qsci-fade-in var(--duration-base) var(--ease-standard); }
+.motion-rise-in { animation: qsci-rise-in var(--duration-slow) var(--ease-standard); }
+
+@keyframes qsci-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes qsci-rise-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-fade-in, .motion-rise-in {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 .label-pill {

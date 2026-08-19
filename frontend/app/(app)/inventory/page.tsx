@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { api, ApiError, type Recommendation } from "@/lib/api";
 import { StatusPill } from "@/components/StatusPill";
+import { PageHeader } from "@/components/PageHeader";
+import { Card } from "@/components/Card";
 
 export default function InventoryPage() {
   const [recs, setRecs] = useState<Recommendation[] | null>(null);
@@ -17,13 +19,10 @@ export default function InventoryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-xl font-semibold">Inventory</h1>
-        <p className="text-sm text-muted">
-          SKU-level reorder recommendations — forecast, safety stock, reorder point, and stockout risk from
-          qsci_core.
-        </p>
-      </header>
+      <PageHeader
+        title="Inventory"
+        description="SKU-level reorder recommendations — forecast, safety stock, reorder point, and stockout risk from qsci_core."
+      />
 
       {error && (
         <div className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>
@@ -40,9 +39,9 @@ export default function InventoryPage() {
       )}
 
       {recs && recs.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <Card padded={false} className="motion-fade-in overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-surface text-left text-xs uppercase tracking-wider text-muted">
+            <thead className="bg-surface text-left text-caption uppercase">
               <tr>
                 <th className="px-3 py-2">SKU</th>
                 <th className="px-3 py-2">Forecast (p50)</th>
@@ -55,19 +54,19 @@ export default function InventoryPage() {
             </thead>
             <tbody>
               {recs.map((r) => (
-                <tr key={r.id} className="border-t border-border">
+                <tr key={r.id} className="border-t border-border transition-colors duration-[var(--duration-fast)] hover:bg-border/20">
                   <td className="px-3 py-2">
                     <a href="/dashboard" className="text-accent hover:underline">
                       {r.sku_id}
                     </a>
                   </td>
-                  <td className="px-3 py-2">{r.forecast_p50.toFixed(1)}</td>
-                  <td className="px-3 py-2">{r.reorder_point.toFixed(1)}</td>
-                  <td className="px-3 py-2">{r.suggested_order_qty.toFixed(1)}</td>
-                  <td className="px-3 py-2">
+                  <td className="text-data px-3 py-2">{r.forecast_p50.toFixed(1)}</td>
+                  <td className="text-data px-3 py-2">{r.reorder_point.toFixed(1)}</td>
+                  <td className="text-data px-3 py-2">{r.suggested_order_qty.toFixed(1)}</td>
+                  <td className="text-data px-3 py-2">
                     {(r.risk_probability * 100).toFixed(1)}% ({r.risk_level})
                   </td>
-                  <td className="px-3 py-2">{(r.confidence_overall * 100).toFixed(0)}%</td>
+                  <td className="text-data px-3 py-2">{(r.confidence_overall * 100).toFixed(0)}%</td>
                   <td className="px-3 py-2">
                     <StatusPill label={r.status} />
                   </td>
@@ -75,7 +74,7 @@ export default function InventoryPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   );
