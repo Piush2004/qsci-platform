@@ -3,6 +3,7 @@ qsci_core/persistence record shapes, they never redefine business logic."""
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from typing import Any
 
@@ -134,8 +135,15 @@ class RecommendationResponse(BaseModel):
 
 class ApprovalActionRequest(BaseModel):
     approver: str = Field(min_length=1, description="Placeholder identity field -- NOT cryptographically verified (no auth system exists yet, disclosed in docs/PHASE_6_PREIMPLEMENTATION_AUDIT.md sec.10)")
-    modified_qty: float | None = None
-    notes: str | None = None
+    modified_qty: float | None = Field(default=None, ge=0, description="Must be finite and non-negative -- validated here too, not just client-side, since this value is persisted to the audit trail")
+    notes: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("modified_qty")
+    @classmethod
+    def _finite_qty(cls, v: float | None) -> float | None:
+        if v is not None and not math.isfinite(v):
+            raise ValueError(f"modified_qty must be finite, got {v}")
+        return v
 
 
 class AuditEventResponse(BaseModel):

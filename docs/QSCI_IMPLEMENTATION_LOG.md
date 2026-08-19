@@ -50,8 +50,64 @@ Date: 2026-08-20
 
 ### Commit
 
-Pending — see final report.
+`bcaacf4` — phase-6 milestone-0: design system + global visual foundation (plus `e1fc34a` for the preceding planning-docs baseline).
 
 ### Not Done This Milestone (Explicitly Deferred, Not Silently Dropped)
 
 Full mobile drawer/bottom-sheet redesign (Milestone 9). Landing-page multi-section redesign per the expanded brief in the Phase 6 implementation prompt (hero/gap/pipeline/evidence/decision-intelligence-explanation/classical-vs-quantum/financial-impact/explainability/research-credibility sections) — the existing single-section landing page already satisfies the core thesis requirement (FORECAST≠DECISION, pipeline visual, quantum-as-research-layer framing) and a full redesign is disproportionate scope for "Milestone 0: design system foundation," risking exactly the "uncontrolled pass" the prompt explicitly forbids; flagged as a candidate for a dedicated later milestone rather than attempted here. Stitch MCP exploration — not available in this environment (checked via `ToolSearch`; only `DesignSync`, a different Claude Design tool, is present).
+
+---
+
+## Milestone 1 — Close the Golden Path + Harden the Decision Center
+
+Status: **COMPLETE**
+Date: 2026-08-20
+
+### Pre-implementation audit (done live in-browser before any code change, per the milestone's own instruction)
+
+- **CURRENTLY WORKING**: Generate, DecisionChain render, WhyPanel render, Approve (backend-confirmed status transition).
+- **CURRENTLY BROKEN** (found during the audit, fixed this milestone): the Audit stage panel didn't refresh after approve/reject — showed only `RECOMMENDATION_CREATED`, missing the just-created `APPROVAL_APPROVE` event, because only a `selectedId` change triggered a refetch and deciding on the currently-selected item doesn't change it.
+- **CURRENTLY MISSING**: the entire Modify workflow (backend `POST /recommendations/{id}/modify` existed and was tested; zero frontend UI called it).
+- **CURRENTLY ONLY API-TESTED**: duplicate-approval/invalid-state-transition handling, `/demand`'s three forecast buttons, backend-unavailable handling.
+
+### Implemented
+
+- **`ModifyPanel` component** (new): quantity + mandatory reason, client-side validated (numeric/finite/non-negative/plausible-magnitude for quantity; non-empty/max-length for reason), ARIA-wired (`aria-invalid`, `aria-describedby`, `role="alert"`), review-before-submit line, uses the Milestone 0 design system (`Card`, existing motion/typography tokens) throughout.
+- **Dashboard wiring**: Approve/Modify/Reject action bar, `actionBusy` flag preventing duplicate submission during any in-flight action, audit-refresh fix (both the recommendation list and audit trail now refetch after every decide/modify success), empty-state `Card` ("No active decisions").
+- **Backend hardening**: `ApprovalActionRequest.modified_qty` now validated server-side too (`ge=0`, a custom finite-check validator) — defense in depth, not relying on client-side validation alone for a value that's persisted to the audit trail. A custom `RequestValidationError` exception handler in `main.py` sanitizes non-finite floats before serializing the error response (fixes a real 500-crash-on-error-response bug, see below).
+- **6 new backend tests**: negative/infinite/valid `modified_qty`, audit-event reason recording.
+
+### Real bugs found and fixed (in the order discovered)
+
+1. **Audit panel staleness** (found during the pre-implementation live audit, before writing any Modify code) — see above. Fixed by refetching audit alongside the recommendation list on every decide/modify success.
+2. **Backend 500 on non-finite input** — sending `modified_qty: Infinity` crashed the *validation-error response itself* (Starlette's `JSONResponse` enforces `allow_nan=False`, but FastAPI's default handler tries to echo the rejected value back). Fixed with a custom exception handler. Found by a newly-written adversarial test, not manual testing — exactly the kind of bug Section 20's "run pytest, not just claim success" mandate exists to catch.
+3. **`ModifyPanel` raw floating-point display** ("152.99897648241702 units") — found via manual browser testing. Fixed with a `fmt()` rounding helper.
+4. **Tooling correction**: Milestone 0's mobile testing tool (`chrome-devtools__resize_page`) turned out to floor at ~500px in this environment, not the requested 390px — discovered when re-testing Modify at "mobile" width looked suspiciously roomy. Switched to true CDP device emulation (`emulate` with a `viewport` string), which surfaced two real bugs invisible at 500px:
+5. **Missing base `grid-cols-1`** on `/dashboard`'s and `/demand`'s responsive grids — CSS grid's implicit auto-placement compressed/clipped content instead of stacking it below `lg`/`md`. Fixed on both pages.
+6. **Action-bar input squeeze** — the approver-name input was compressed to near-zero width beside three buttons in a single flex row at 390px. Fixed: `flex-col sm:flex-row`, input gets its own row below `sm`.
+
+### Tested
+
+- `npx tsc --noEmit`: 0 errors. `npm run lint`: 0 errors. `npm run build`: succeeds, all 5 routes.
+- `backend/tests/`: 42/42 passed (36 prior + 6 new).
+- Root `qsci_core` suite: 176 passed, 1 xfailed — unchanged from the pre-milestone baseline, 0 regressions.
+
+### Browser Verified
+
+Full Tests A-K from the milestone prompt — see `docs/QSCI_E2E_TEST_REPORT.md` Milestone 1 section for the complete table. Highlights: real backend-confirmed Approve and Modify (not optimistic UI), validation blocking on invalid quantity/missing reason with correct ARIA wiring, honest "Backend unavailable" on a real backend outage, and a full generate→select→approve flow re-verified working at *true* 390px after the two mobile fixes above.
+
+### Visual QA
+
+See `docs/QSCI_VISUAL_QA_REPORT.md` Milestone 1 section — desktop, true-768px tablet, and true-390px mobile all re-screenshotted after fixes.
+
+### Accessibility
+
+Spot-checked (not a full WCAG 2.2 AA pass): `ModifyPanel`'s quantity/reason fields both have real `<label>`s (not placeholder-as-label), `aria-invalid`/`aria-describedby` wired to `role="alert"` error messages, confirmed present in the live accessibility tree (not just written in source) via `chrome-devtools__take_snapshot`.
+
+### Regression Protection
+
+No changes to `qsci_core`, `DecisionChain`, or `WhyPanel`'s core rendering logic (only wrapped in `Card`, unchanged this milestone). Existing Golden Path data (from Phase 6 and Milestone 0's sessions) rendered identically throughout this milestone's testing, confirming no regression.
+
+### Commit
+
+Pending — see final report.

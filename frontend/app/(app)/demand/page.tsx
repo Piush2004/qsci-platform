@@ -62,7 +62,7 @@ export default function DemandPage() {
         <div className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {MODELS.map((m) => {
           const run = runs[m.key];
           return (

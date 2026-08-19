@@ -36,3 +36,48 @@ Date: 2026-08-20
 - `/inventory`'s table uses `overflow-x-auto` as a mobile stopgap, not a card-list redesign — acceptable for Milestone 0's scope, flagged for Milestone 9.
 - `/research`'s two JSON sections (`<pre>{JSON.stringify(...)}</pre>`) are functional but not designed — explicitly scoped to Milestone 6 (Research Lab Depth Pass) in `docs/QSCI_PHASE_6_MASTER_PLAN.md`, not addressed this milestone.
 - Landing page (`/`) is single-section; the expanded multi-section brief (hero/research-gap/pipeline/evidence/financial-impact/etc.) was not attempted this milestone — see `docs/QSCI_IMPLEMENTATION_LOG.md`'s Milestone 0 entry for the scoping rationale.
+
+---
+
+## Milestone 1 — Close the Golden Path
+
+Date: 2026-08-20
+
+### Tooling correction (read this before trusting Milestone 0's mobile row above)
+
+Milestone 0's "mobile (390×844)" testing used `chrome-devtools__resize_page(390, 844)`, which — discovered this milestone — silently floors at `window.innerWidth === 500` in this environment (confirmed via `evaluate_script`; the tool reports success at the requested size but the page never actually renders at less than ~500px). Milestone 0's "PASS" verdict was real evidence, just at ~500px, not true 390px. Milestone 1 switched to `chrome-devtools__emulate({viewport: "390x844x2,mobile,touch"})`, which does deliver a true `window.innerWidth === 390` (verified before every mobile screenshot below), and found two additional real bugs invisible at 500px.
+
+### Desktop (1440×900)
+
+| Page | Result |
+|---|---|
+| `/dashboard` | `ModifyPanel` renders correctly below the WhyPanel, `Card`-styled, consistent with the rest of the design system. Validation error states (`role="alert"`, red text) render inline under each field. Review-before-submit line renders correctly. |
+
+### Tablet (768×1024, re-verified with true device emulation this time)
+
+| Page | Result |
+|---|---|
+| `/dashboard` | Re-confirmed clean at *true* 768px (not just the ~500px-floor tool used in Milestone 0) — hamburger nav, single-column stacking, no overflow. |
+
+### Mobile (true 390×844, device-emulated)
+
+| Page | Result |
+|---|---|
+| `/dashboard` (initial load) | PASS — list and header render cleanly. |
+| `/dashboard` (recommendation selected, before fix) | **FAIL** — two real bugs found at true 390px that the ~500px Milestone-0 testing missed: (1) the `grid lg:grid-cols-[320px_1fr]` container had no base `grid-cols-1`, so the recommendation list and WhyPanel text were compressed/cut off rather than stacked; (2) the approve/modify/reject action bar's approver-name input was squeezed to near-zero width beside three buttons in one flex row. Screenshotted as evidence before fixing. |
+| `/dashboard` (after both fixes) | **PASS** — WhyPanel text wraps fully, confidence-decomposition grid renders as a clean 2×2, approver input gets its own full-width row with buttons wrapping below it. Full interaction verified: filled approver name, tapped Approve, confirmed real backend-driven status change (PENDING→APPROVED) at true 390px. |
+| `/demand` | **FAIL before fix** (same missing-`grid-cols-1` bug as dashboard, on the `md:grid-cols-3` model-card grid) → **PASS after fix** — three cards stack full-width, no overflow. |
+| `/inventory` | PASS — table's `overflow-x-auto` is correctly contained to the table's own Card; no page-level horizontal overflow (confirmed via `document.documentElement.scrollWidth === window.innerWidth`). |
+
+### Adversarial (backend down)
+
+| Scenario | Result |
+|---|---|
+| `/dashboard`, backend killed mid-session, page reloaded | Honest "Backend unavailable" banner, "PENDING DECISIONS (0)", no fabricated cached data, no fake success state. |
+| `/dashboard`, an orphaned unrelated process answering on the same port with 404 | Honest "Backend error: Not Found" banner — the error banner surfaces whatever the real HTTP response actually was, never papered over. (This was an accidental real-world case of "backend returns an unexpected response," not a staged test — documented because it's genuine evidence the error path is not hardcoded to one specific failure mode.) |
+
+### Known Visual Gaps (Unchanged From Milestone 0, Still Deferred)
+
+- `/research`'s two JSON sections — still Milestone 6 scope.
+- Landing page multi-section redesign — still out of scope, per Milestone 0's rationale.
+- DecisionChain's own stage-button row still uses `overflow-x-auto` at narrow widths (swipeable, not lost, not fixed this milestone) — full mobile redesign remains Milestone 9 scope.

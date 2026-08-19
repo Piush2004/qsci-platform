@@ -270,6 +270,49 @@ def test_modify_requires_modified_qty(client):
     assert r.status_code == 422
 
 
+def test_modify_negative_quantity_rejected(client):
+    fc = client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.post(f"/api/v1/recommendations/{rec['id']}/modify", json={"approver": "planner_a", "modified_qty": -5})
+    assert r.status_code == 422
+
+
+def test_modify_infinite_quantity_rejected(client):
+    fc = client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    # httpx's `json=` param refuses to serialize inf/nan itself (ValueError
+    # before the request is even sent) -- send the raw body directly so the
+    # non-finite value actually reaches the server's own validation.
+    r = client.post(
+        f"/api/v1/recommendations/{rec['id']}/modify",
+        content='{"approver": "planner_a", "modified_qty": Infinity}',
+        headers={"Content-Type": "application/json"},
+    )
+    assert r.status_code == 422  # rejected by _finite_qty validator
+
+
+def test_modify_valid_quantity_and_reason_succeeds(client):
+    fc = client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.post(f"/api/v1/recommendations/{rec['id']}/modify", json={
+        "approver": "planner_a", "modified_qty": 200, "notes": "Adjusted for known upcoming promotion",
+    })
+    assert r.status_code == 200
+    assert r.json()["status"] == "MODIFIED"
+
+
+def test_modify_audit_event_records_reason(client):
+    fc = client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    client.post(f"/api/v1/recommendations/{rec['id']}/modify", json={
+        "approver": "planner_a", "modified_qty": 200, "notes": "Adjusted for known upcoming promotion",
+    })
+    events = client.get(f"/api/v1/audit?recommendation_id={rec['id']}").json()
+    modify_event = next(e for e in events if e["event_type"] == "APPROVAL_MODIFY")
+    assert modify_event["event_payload"]["notes"] == "Adjusted for known upcoming promotion"
+    assert modify_event["event_payload"]["modified_qty"] == 200
+
+
 def test_approve_invalid_recommendation_id_404(client):
     r = client.post("/api/v1/recommendations/999999/approve", json={"approver": "planner_a"})
     assert r.status_code == 404
