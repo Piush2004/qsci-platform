@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border: #e2e5eb;
+  --foreground: #10141c;
+  --muted: #5b6472;
+  --accent: #0891b2;
+  --accent-strong: #0e7490;
+  --research: #7c3aed;
+  --live: #16a34a;
+  --illustrative: #d97706;
+  --pending: #6b7280;
+  --danger: #dc2626;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-research: var(--research);
+  --color-live: var(--live);
+  --color-illustrative: var(--illustrative);
+  --color-pending: var(--pending);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0f17;
+    --surface: #121826;
+    --surface-raised: #171f30;
+    --border: #263047;
+    --foreground: #e7ecf5;
+    --muted: #8b97ac;
+    --accent: #22d3ee;
+    --accent-strong: #06b6d4;
+    --research: #a78bfa;
+    --live: #34d399;
+    --illustrative: #fbbf24;
+    --pending: #9aa4b6;
+    --danger: #f87171;
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.label-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.label-live { background: color-mix(in oklab, var(--live) 18%, transparent); color: var(--live); }
+.label-research { background: color-mix(in oklab, var(--research) 18%, transparent); color: var(--research); }
+.label-illustrative { background: color-mix(in oklab, var(--illustrative) 18%, transparent); color: var(--illustrative); }
+.label-pending { background: color-mix(in oklab, var(--pending) 22%, transparent); color: var(--pending); }

@@ -39,14 +39,28 @@ def test_all_presets_are_documented():
 
 @pytest.mark.slow
 def test_qaoa_noiseless_default_unchanged():
-    """Default noise_preset='noiseless' must be identical to the pre-Phase-4
-    code path (no noise_preset kwarg at all) -- verifies the Phase 4
-    extension didn't change Phase 3's already-audited noiseless results."""
+    """Default noise_preset='noiseless' must exercise the pre-Phase-4 code
+    path identically (no noise_preset kwarg at all) -- verifies the Phase 4
+    extension didn't change Phase 3's already-audited noiseless behavior.
+
+    Does NOT assert bitstring-identical samples: COBYLA + statevector
+    sampling is documented non-deterministic even at a fixed seed (Phase
+    2.1's VQR finding -- "0/5 bit-identical" runs -- applies to this QAOA
+    path too; confirmed empirically here, not assumed). The real invariant
+    both calls must share is the decoded solution quality and the code
+    path taken (simulator label), not the raw bitstring."""
     qi = _tiny_qubo()
     result = solve_qubo_with_qaoa(qi, p=1, optimizer_maxiter=20, shots=1024, seed=42)
     result_explicit = solve_qubo_with_qaoa(qi, p=1, optimizer_maxiter=20, shots=1024, seed=42, noise_preset="noiseless")
-    assert result.sample == result_explicit.sample
-    assert result.energy == pytest.approx(result_explicit.energy)
+
+    assert result.metadata.simulator == result_explicit.metadata.simulator
+    assert "StatevectorSampler" in result.metadata.simulator
+
+    decoded = decode_qubo_sample(result.sample, 4, 2, COORDS, DEMANDS, CAPACITY, DEPOT)
+    decoded_explicit = decode_qubo_sample(result_explicit.sample, 4, 2, COORDS, DEMANDS, CAPACITY, DEPOT)
+    assert decoded.feasible and decoded_explicit.feasible
+    assert decoded.total_cost == pytest.approx(decoded_explicit.total_cost)
+    assert decoded.total_cost == pytest.approx(KNOWN_OPTIMAL_COST, abs=1e-6)
     assert "StatevectorSampler" in result_explicit.metadata.simulator
 
 

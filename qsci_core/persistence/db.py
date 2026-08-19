@@ -11,7 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from qsci_core.persistence.models import (
-    ApprovalDecision, ApprovalRecord, AuditRecord, Base, OutcomeRecord, RecommendationRecord,
+    ApprovalDecision, ApprovalRecord, AuditRecord, Base, OutcomeRecord,
+    RecommendationRecord, RecommendationStatus,
 )
 from qsci_core.recommendation.builder import Recommendation
 
@@ -68,17 +69,31 @@ def record_approval(
     rec = session.get(RecommendationRecord, recommendation_id)
     if rec is None:
         raise ValueError(f"no recommendation with id={recommendation_id}")
+    if rec.status != RecommendationStatus.PENDING:
+        raise ValueError(
+            f"recommendation {recommendation_id} already decided (status={rec.status.value}) -- "
+            f"a recommendation can only be approved/rejected/modified once, not re-decided"
+        )
 
+    previous_status = rec.status
     approval = ApprovalRecord(
         recommendation_id=recommendation_id, decision=decision, approver=approver,
         modified_qty=modified_qty, notes=notes,
     )
     session.add(approval)
+    rec.status = {
+        ApprovalDecision.APPROVE: RecommendationStatus.APPROVED,
+        ApprovalDecision.REJECT: RecommendationStatus.REJECTED,
+        ApprovalDecision.MODIFY: RecommendationStatus.MODIFIED,
+    }[decision]
     session.flush()
     session.add(AuditRecord(
         recommendation_id=recommendation_id,
         event_type=f"APPROVAL_{decision.value}",
-        event_payload={"approver": approver, "modified_qty": modified_qty, "notes": notes},
+        event_payload={
+            "approver": approver, "modified_qty": modified_qty, "notes": notes,
+            "previous_status": previous_status.value, "new_status": rec.status.value,
+        },
     ))
     session.commit()
     return approval
