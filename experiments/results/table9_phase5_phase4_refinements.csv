@@ -1,0 +1,4 @@
+dimension,phase3_finding,phase4_refinement
+Routing feasibility (fixed config),"Collapses at scale (Phase 3, num_reads=100 fixed)","Sampling artifact, not structural -- recovers substantially with num_reads (Phase 4 Sec.7)"
+QAOA depth,Only p=1 tested (runtime budget),"p=2/p=3 tested: no cost improvement, feasibility not monotonic, runtime 1.85-2.66x higher (Phase 4 Sec.5)"
+QAOA runtime wall,"N=5 costs 628.9s/run, mechanism undetermined","Execution-cost-dominated (11.7x single-call ratio explains 70% of full-run ratio); Aer noisy backend measured ~38x faster than StatevectorSampler at same N -- partly a simulator-choice artifact, not purely algorithmic (Phase 4 Sec.4, Sec.6)"

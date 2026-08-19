@@ -4,4 +4,4 @@ Forecasting: VQR,253,"qiskit, qiskit-machine-learning, qiskit-aer","n_qubits, fe
 Routing: OR-Tools (native VRP),111,ortools,"time_limit, search strategy","standard CP-SAT/routing-library call, well-documented"
 Routing: QUBO formulation (shared by all 3 quantum-track solvers),315,dimod,"penalty_visit, penalty_capacity (both had to be *derived*, not guessed -- see Phase 3 report)","cluster-first-route-second decomposition, penalty derivation that must dominate every possible violation cost -- required brute-force validation to catch a real formulation bug (Phase 3)"
 Routing: Simulated Annealing,52,dwave-samplers,num_reads,thin wrapper once the QUBO exists
-Routing: QAOA,130,"qiskit-optimization, qiskit-algorithms","qaoa_depth (p), COBYLA maxiter, shots","highest of all six: BQM->QuadraticProgram conversion, circuit depth scales with problem size, COBYLA optimizer loop wraps repeated circuit executions"
+Routing: QAOA,170,"qiskit-optimization, qiskit-algorithms","qaoa_depth (p), COBYLA maxiter, shots","highest of all six: BQM->QuadraticProgram conversion, circuit depth scales with problem size, COBYLA optimizer loop wraps repeated circuit executions"

@@ -33,5 +33,5 @@
   },
   "hardware": "Windows AMD64, AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
   "simulator": "qiskit_aer.AerSimulator(method=statevector)",
-  "git_commit": "3ce92bda36b9aa23070df689ea20ce5e2b5ae7d6"
+  "git_commit": "fa3910d19bf14ff92c081b9ddceeb4ec90c6668e"
 }

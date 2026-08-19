@@ -1,9 +1,9 @@
 dimension,classical,quantum,winner,evidence,confidence
 Forecasting accuracy (wMAPE),25.56%,31.06%,Classical (not statistically distinguishable),"DM test: significant=False (all p>0.05, see Section 7)","LOW (n=14, low statistical power)"
-Forecasting runtime (solver-only),0.0329s,1.30s (N=4),Classical,"Quantum was 39.3x slower (measured, simulator)",HIGH
+Forecasting runtime (solver-only),0.0359s,1.30s (N=4),Classical,"Quantum was 36.1x slower (measured, simulator)",HIGH
 Routing feasibility rate (mean across N),100.0%,80.0%,Classical,see Section 13 feasibility table,HIGH
 "Routing optimality gap (annealing, mean of best-per-size)",0% (is the reference),2.56%,Classical,"annealing best-of-10 vs. OR-Tools-on-QUBO reference, per size (Section 14-15)",HIGH
 "Routing runtime (solver-only, N=4)",0.163s,"annealing=0.013s, QAOA=37.61s",Quantum,fastest solver at N=4: Simulated Annealing,HIGH
 Resource scaling with problem size,"O(1) hyperparameters, no circuit/qubit growth",QUBO variables grow from 8 to 128 across N=4..16; VQR train time grows 224x from N=4 to N=12,Classical,"Sections 9, 16-17",HIGH
-Implementation complexity,"mean LOC=119, fewer deps/hyperparameters","mean LOC=188, more deps/hyperparameters, required a real bug fix (QUBO penalties)",Classical,Section 11,MODERATE (qualitative)
+Implementation complexity,"mean LOC=119, fewer deps/hyperparameters","mean LOC=198, more deps/hyperparameters, required a real bug fix (QUBO penalties)",Classical,Section 11,MODERATE (qualitative)
 Business impact (illustrative $ only),N/A (no illustrative baseline computed above),"computed per-config, Section 22",Inconclusive,"underlying $ assumptions are ILLUSTRATIVE, not real cost data",LOW (illustrative)
