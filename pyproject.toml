@@ -14,6 +14,9 @@ include = ["qsci_core*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "slow: real quantum-circuit-execution tests (seconds to tens of seconds each) -- skip with `-m 'not slow'` for a fast pre-commit run",
+]
 
 [tool.black]
 line-length = 100

@@ -1,0 +1,34 @@
+[
+  {
+    "multiplier": 1.0,
+    "penalty_visit": 1050134.6109370932,
+    "penalty_capacity": 363.4941540107626,
+    "feasible": true,
+    "cost": 380.00755017228636,
+    "feasibility_reason": "all customers visited exactly once, all vehicles within capacity"
+  },
+  {
+    "multiplier": 2.0,
+    "penalty_visit": 4199811.455440352,
+    "penalty_capacity": 726.9883080215252,
+    "feasible": true,
+    "cost": 380.00755017228636,
+    "feasibility_reason": "all customers visited exactly once, all vehicles within capacity"
+  },
+  {
+    "multiplier": 5.0,
+    "penalty_visit": 26246095.390347112,
+    "penalty_capacity": 1817.4707700538129,
+    "feasible": true,
+    "cost": 380.00755017228636,
+    "feasibility_reason": "all customers visited exactly once, all vehicles within capacity"
+  },
+  {
+    "multiplier": 10.0,
+    "penalty_visit": 104980746.61984833,
+    "penalty_capacity": 3634.9415401076258,
+    "feasible": true,
+    "cost": 380.00755017228636,
+    "feasibility_reason": "all customers visited exactly once, all vehicles within capacity"
+  }
+]

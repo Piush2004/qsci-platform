@@ -1,0 +1,87 @@
+{
+  "cvrplib": [
+    {
+      "instance": "A-n32-k5",
+      "number_of_customers": 31,
+      "number_of_vehicles": 5,
+      "capacity": 100,
+      "published_bks": 784,
+      "source": "raw .sol file, data/raw/cvrplib/",
+      "verification_status": "MATCHES_PRIOR_REPORT"
+    },
+    {
+      "instance": "A-n33-k5",
+      "number_of_customers": 32,
+      "number_of_vehicles": 5,
+      "capacity": 100,
+      "published_bks": 661,
+      "source": "raw .sol file, data/raw/cvrplib/",
+      "verification_status": "MATCHES_PRIOR_REPORT"
+    },
+    {
+      "instance": "A-n37-k5",
+      "number_of_customers": 36,
+      "number_of_vehicles": 5,
+      "capacity": 100,
+      "published_bks": 669,
+      "source": "raw .sol file, data/raw/cvrplib/",
+      "verification_status": "MATCHES_PRIOR_REPORT"
+    },
+    {
+      "instance": "B-n31-k5",
+      "number_of_customers": 30,
+      "number_of_vehicles": 5,
+      "capacity": 100,
+      "published_bks": 672,
+      "source": "raw .sol file, data/raw/cvrplib/",
+      "verification_status": "MATCHES_PRIOR_REPORT"
+    }
+  ],
+  "amazon_last_mile": {
+    "directly_observed": {
+      "route_count": 6112,
+      "total_stops_including_depot_per_route": 904527,
+      "unique_station_codes": 17,
+      "station_codes": [
+        "DAU1",
+        "DBO1",
+        "DBO2",
+        "DBO3",
+        "DCH1",
+        "DCH2",
+        "DCH3",
+        "DCH4",
+        "DLA3",
+        "DLA4",
+        "DLA5",
+        "DLA7",
+        "DLA8",
+        "DLA9",
+        "DSE2",
+        "DSE4",
+        "DSE5"
+      ],
+      "route_score_categories": [
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "routes_with_travel_times": 6112,
+      "routes_with_actual_sequences": 6112,
+      "routes_with_package_data": 6112,
+      "routes_with_invalid_sequence_scores": 6112,
+      "total_package_count": 1457175
+    },
+    "derived": {
+      "avg_stops_per_route": 147.99
+    },
+    "assumed": {
+      "note": "no monetary, fuel, or driver-cost data present in this dataset -- any such figures used elsewhere in QSCI are ILLUSTRATIVE, not derived from this data"
+    },
+    "previously_reported_phase_0": {
+      "routes": 6112,
+      "stops": 904527,
+      "match": true
+    }
+  }
+}
