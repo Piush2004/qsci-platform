@@ -27,6 +27,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 
+from qiskit import transpile
 from qiskit.primitives import StatevectorSampler
 from qiskit_algorithms.minimum_eigensolvers import QAOA
 from qiskit_algorithms.optimizers import COBYLA
@@ -34,7 +35,32 @@ from qiskit_optimization import QuadraticProgram
 from qiskit_optimization.algorithms import MinimumEigenOptimizer
 from qiskit_optimization.converters import QuadraticProgramToQubo
 
+from qsci_core.optimization.quantum.noise_models import BASIS_GATES, build_noise_model
 from qsci_core.optimization.quantum.qubo_formulator import QUBOInstance
+
+
+class _TranspilingAerSampler:
+    """Wraps qiskit_aer's SamplerV2: QAOA's ansatz circuit contains a
+    composite `QAOAAnsatz` instruction that Aer's compiler cannot execute
+    directly (unlike qiskit.primitives.StatevectorSampler, which decomposes
+    opaque gates recursively via their `.definition`). Aer requires an
+    explicit transpile to its basis gates first -- this wrapper does exactly
+    that and nothing else; no noise/error injected beyond the NoiseModel
+    passed to the underlying Aer sampler."""
+
+    def __init__(self, aer_sampler, basis_gates: list[str]):
+        self._sampler = aer_sampler
+        self._basis_gates = basis_gates
+
+    def run(self, pubs, *, shots: int | None = None):
+        transpiled = []
+        for pub in pubs:
+            if isinstance(pub, (tuple, list)):
+                circ, *rest = pub
+                transpiled.append((transpile(circ, basis_gates=self._basis_gates, optimization_level=1), *rest))
+            else:
+                transpiled.append(transpile(pub, basis_gates=self._basis_gates, optimization_level=1))
+        return self._sampler.run(transpiled, shots=shots)
 
 
 @dataclass
@@ -76,6 +102,7 @@ def solve_qubo_with_qaoa(
     optimizer_maxiter: int = 20,
     shots: int = 1024,
     seed: int = 42,
+    noise_preset: str = "noiseless",
 ) -> QAOAResult:
     if p < 1:
         raise ValueError(f"p (QAOA depth) must be >= 1, got {p}")
@@ -91,7 +118,20 @@ def solve_qubo_with_qaoa(
     qubo_qp = converter.convert(qp)
     hamiltonian, _offset = qubo_qp.to_ising()
 
-    sampler = StatevectorSampler(default_shots=shots, seed=seed)
+    noise_model = build_noise_model(noise_preset)
+    if noise_model is None:
+        sampler = StatevectorSampler(default_shots=shots, seed=seed)
+        simulator_label = "qiskit.primitives.StatevectorSampler (noiseless, shot-sampled)"
+    else:
+        from qiskit_aer.primitives import SamplerV2 as AerSampler
+
+        aer_sampler = AerSampler(
+            default_shots=shots, seed=seed,
+            options={"backend_options": {"noise_model": noise_model, "basis_gates": BASIS_GATES}},
+        )
+        sampler = _TranspilingAerSampler(aer_sampler, BASIS_GATES)
+        simulator_label = f"qiskit_aer.primitives.SamplerV2 (Aer noise model: {noise_preset}, shot-sampled)"
+
     optimizer = COBYLA(maxiter=optimizer_maxiter)
 
     n_fevals = {"count": 0}
@@ -124,7 +164,7 @@ def solve_qubo_with_qaoa(
         optimizer_maxiter=optimizer_maxiter,
         optimizer_n_function_evals=n_fevals["count"] or None,
         shots=shots,
-        simulator="qiskit.primitives.StatevectorSampler (noiseless, shot-sampled)",
+        simulator=simulator_label,
     )
 
     return QAOAResult(sample=sample, energy=float(result.fval), metadata=metadata, solve_time_seconds=solve_time)

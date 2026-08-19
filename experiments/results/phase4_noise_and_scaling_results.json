@@ -1,0 +1,225 @@
+{
+  "part_a_runtime_wall_diagnosis": {
+    "per_size": [
+      {
+        "n_customers": 4,
+        "qubits": 8,
+        "qubo_variables": 8,
+        "circuit_depth": 34,
+        "gate_count": 81,
+        "single_call_mean_seconds": 1.5291903800040019,
+        "single_call_std_seconds": 0.030478306893300472,
+        "single_call_min_seconds": 1.4945233000034932,
+        "single_call_max_seconds": 1.584365800008527
+      },
+      {
+        "n_customers": 5,
+        "qubits": 10,
+        "qubo_variables": 10,
+        "circuit_depth": 43,
+        "gate_count": 116,
+        "single_call_mean_seconds": 17.910289819998432,
+        "single_call_std_seconds": 0.3248678073432271,
+        "single_call_min_seconds": 17.50603499999852,
+        "single_call_max_seconds": 18.369460500005516
+      }
+    ],
+    "single_call_ratio_n5_over_n4": 11.712269482071658,
+    "phase3_full_run_ratio_n5_over_n4": 16.726063829787233
+  },
+  "part_b_annealing_reads_sweep": [
+    {
+      "n_customers": 8,
+      "num_reads": 100,
+      "n_seeds": 5,
+      "feasible_count": 4,
+      "feasibility_rate": 0.8,
+      "best_cost": 650.1039497810368,
+      "mean_cost": 691.6676586664607,
+      "mean_runtime_seconds": 0.05154024000221398
+    },
+    {
+      "n_customers": 8,
+      "num_reads": 500,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 643.4996806621305,
+      "mean_cost": 689.8000980662421,
+      "mean_runtime_seconds": 0.251699540001573
+    },
+    {
+      "n_customers": 8,
+      "num_reads": 1000,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 643.4996806621305,
+      "mean_cost": 666.1110754856261,
+      "mean_runtime_seconds": 0.511503739998443
+    },
+    {
+      "n_customers": 8,
+      "num_reads": 5000,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 643.4996806621305,
+      "mean_cost": 643.4996806621305,
+      "mean_runtime_seconds": 2.504091980002704
+    },
+    {
+      "n_customers": 10,
+      "num_reads": 100,
+      "n_seeds": 5,
+      "feasible_count": 1,
+      "feasibility_rate": 0.2,
+      "best_cost": 859.0130939988561,
+      "mean_cost": 859.0130939988561,
+      "mean_runtime_seconds": 0.08556121999572497
+    },
+    {
+      "n_customers": 10,
+      "num_reads": 500,
+      "n_seeds": 5,
+      "feasible_count": 4,
+      "feasibility_rate": 0.8,
+      "best_cost": 910.4092455248726,
+      "mean_cost": 950.9960893103146,
+      "mean_runtime_seconds": 0.41890465999895243
+    },
+    {
+      "n_customers": 10,
+      "num_reads": 1000,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 910.4092455248726,
+      "mean_cost": 956.8843010851249,
+      "mean_runtime_seconds": 0.8448925199976657
+    },
+    {
+      "n_customers": 10,
+      "num_reads": 5000,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 910.4092455248726,
+      "mean_cost": 924.5981053185673,
+      "mean_runtime_seconds": 4.296397439995781
+    },
+    {
+      "n_customers": 12,
+      "num_reads": 100,
+      "n_seeds": 5,
+      "feasible_count": 0,
+      "feasibility_rate": 0.0,
+      "best_cost": null,
+      "mean_cost": null,
+      "mean_runtime_seconds": 0.12628810000314844
+    },
+    {
+      "n_customers": 12,
+      "num_reads": 500,
+      "n_seeds": 5,
+      "feasible_count": 1,
+      "feasibility_rate": 0.2,
+      "best_cost": 1195.9190080257508,
+      "mean_cost": 1195.9190080257508,
+      "mean_runtime_seconds": 0.6244481400004588
+    },
+    {
+      "n_customers": 12,
+      "num_reads": 1000,
+      "n_seeds": 5,
+      "feasible_count": 1,
+      "feasibility_rate": 0.2,
+      "best_cost": 1195.9190080257508,
+      "mean_cost": 1195.9190080257508,
+      "mean_runtime_seconds": 1.2491711600014241
+    },
+    {
+      "n_customers": 12,
+      "num_reads": 5000,
+      "n_seeds": 5,
+      "feasible_count": 3,
+      "feasibility_rate": 0.6,
+      "best_cost": 1140.287623694528,
+      "mean_cost": 1181.3410100299225,
+      "mean_runtime_seconds": 6.234944839999661
+    }
+  ],
+  "part_c_noise_sensitivity": [
+    {
+      "noise_preset": "noiseless",
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 39.00745375999831
+    },
+    {
+      "noise_preset": "depolarizing_low",
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 1.0392810199933593
+    },
+    {
+      "noise_preset": "depolarizing_high",
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 1.0582127800007584
+    },
+    {
+      "noise_preset": "readout",
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 1.065548159996979
+    }
+  ],
+  "part_d_qaoa_depth_sweep": [
+    {
+      "p": 1,
+      "n_seeds": 5,
+      "feasible_count": 5,
+      "feasibility_rate": 1.0,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 38.00080948000541,
+      "circuit_depth": 34,
+      "gate_count_total": 81
+    },
+    {
+      "p": 2,
+      "n_seeds": 5,
+      "feasible_count": 3,
+      "feasibility_rate": 0.6,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 70.34778852000018,
+      "circuit_depth": 51,
+      "gate_count_total": 145
+    },
+    {
+      "p": 3,
+      "n_seeds": 5,
+      "feasible_count": 4,
+      "feasibility_rate": 0.8,
+      "best_cost": 380.00755017228636,
+      "mean_cost": 380.00755017228636,
+      "mean_runtime_seconds": 101.13696461999788,
+      "circuit_depth": 68,
+      "gate_count_total": 209
+    }
+  ]
+}

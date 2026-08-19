@@ -1,0 +1,13 @@
+{
+  "n4": {
+    "construction_mean_seconds": 0.005146200000308454,
+    "transpile_mean_seconds": 0.011619819997576997,
+    "full_run_total_seconds": 36.12596750000375,
+    "full_run_n_function_evals": 20,
+    "implied_per_eval_seconds": 1.8062983750001878
+  },
+  "n5": {
+    "construction_mean_seconds": 0.004212299996288494,
+    "transpile_mean_seconds": 0.009874619997572155
+  }
+}

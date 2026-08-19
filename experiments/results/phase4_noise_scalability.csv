@@ -1,0 +1,27 @@
+experiment,method,problem_size,seed,noise_preset,qaoa_depth,num_reads,objective,gap,feasible,runtime,qubits,depth,gates,status,label
+phase4_part_a_runtime_wall,qaoa_single_circuit_execution,4,,noiseless,1,,,,,1.5291903800040019,8,34,81,RESEARCH,"single forward-execution call, N=4"
+phase4_part_a_runtime_wall,qaoa_single_circuit_execution,5,,noiseless,1,,,,,17.910289819998432,10,43,116,RESEARCH,"single forward-execution call, N=5"
+phase4_part_b_annealing_reads,simulated_annealing,8,,,,100,650.1039497810368,,0.8,0.05154024000221398,,,,RESEARCH,annealing feasibility sweep N=8 reads=100
+phase4_part_b_annealing_reads,simulated_annealing,8,,,,500,643.4996806621305,,1.0,0.251699540001573,,,,RESEARCH,annealing feasibility sweep N=8 reads=500
+phase4_part_b_annealing_reads,simulated_annealing,8,,,,1000,643.4996806621305,,1.0,0.511503739998443,,,,RESEARCH,annealing feasibility sweep N=8 reads=1000
+phase4_part_b_annealing_reads,simulated_annealing,8,,,,5000,643.4996806621305,,1.0,2.504091980002704,,,,RESEARCH,annealing feasibility sweep N=8 reads=5000
+phase4_part_b_annealing_reads,simulated_annealing,10,,,,100,859.0130939988561,,0.2,0.08556121999572497,,,,RESEARCH,annealing feasibility sweep N=10 reads=100
+phase4_part_b_annealing_reads,simulated_annealing,10,,,,500,910.4092455248726,,0.8,0.41890465999895243,,,,RESEARCH,annealing feasibility sweep N=10 reads=500
+phase4_part_b_annealing_reads,simulated_annealing,10,,,,1000,910.4092455248726,,1.0,0.8448925199976657,,,,RESEARCH,annealing feasibility sweep N=10 reads=1000
+phase4_part_b_annealing_reads,simulated_annealing,10,,,,5000,910.4092455248726,,1.0,4.296397439995781,,,,RESEARCH,annealing feasibility sweep N=10 reads=5000
+phase4_part_b_annealing_reads,simulated_annealing,12,,,,100,,,0.0,0.12628810000314844,,,,RESEARCH,annealing feasibility sweep N=12 reads=100
+phase4_part_b_annealing_reads,simulated_annealing,12,,,,500,1195.9190080257508,,0.2,0.6244481400004588,,,,RESEARCH,annealing feasibility sweep N=12 reads=500
+phase4_part_b_annealing_reads,simulated_annealing,12,,,,1000,1195.9190080257508,,0.2,1.2491711600014241,,,,RESEARCH,annealing feasibility sweep N=12 reads=1000
+phase4_part_b_annealing_reads,simulated_annealing,12,,,,5000,1140.287623694528,,0.6,6.234944839999661,,,,RESEARCH,annealing feasibility sweep N=12 reads=5000
+phase4_part_c_noise_sensitivity,qaoa,4,,noiseless,1,,380.00755017228636,0.0,1.0,39.00745375999831,8,,,RESEARCH,QAOA noise preset=noiseless
+phase4_part_c_noise_sensitivity,qaoa,4,,depolarizing_low,1,,380.00755017228636,0.0,1.0,1.0392810199933593,8,,,RESEARCH,QAOA noise preset=depolarizing_low
+phase4_part_c_noise_sensitivity,qaoa,4,,depolarizing_high,1,,380.00755017228636,0.0,1.0,1.0582127800007584,8,,,RESEARCH,QAOA noise preset=depolarizing_high
+phase4_part_c_noise_sensitivity,qaoa,4,,readout,1,,380.00755017228636,0.0,1.0,1.065548159996979,8,,,RESEARCH,QAOA noise preset=readout
+phase4_part_d_depth_sweep,qaoa,4,,noiseless,1,,380.00755017228636,0.0,1.0,38.00080948000541,8,34,81,RESEARCH,QAOA p=1
+phase4_part_d_depth_sweep,qaoa,4,,noiseless,2,,380.00755017228636,0.0,0.6,70.34778852000018,8,51,145,RESEARCH,QAOA p=2
+phase4_part_d_depth_sweep,qaoa,4,,noiseless,3,,380.00755017228636,0.0,0.8,101.13696461999788,8,68,209,RESEARCH,QAOA p=3
+phase4_runtime_components,qaoa_circuit_construction,4,,,,,,,,0.005146200000308454,,,,RESEARCH,"QAOAAnsatz construction+bind, N=4"
+phase4_runtime_components,qaoa_transpile,4,,,,,,,,0.011619819997576997,,,,RESEARCH,"transpile to Aer basis gates, N=4"
+phase4_runtime_components,qaoa_circuit_construction,5,,,,,,,,0.004212299996288494,,,,RESEARCH,"QAOAAnsatz construction+bind, N=5"
+phase4_runtime_components,qaoa_transpile,5,,,,,,,,0.009874619997572155,,,,RESEARCH,"transpile to Aer basis gates, N=5"
+phase4_runtime_components,qaoa_full_optimization,4,,,1,,,,,36.12596750000375,,,,RESEARCH,"full COBYLA optimization, n_fevals=20"
