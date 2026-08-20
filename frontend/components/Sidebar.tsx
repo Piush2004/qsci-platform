@@ -7,6 +7,7 @@ const DECISION_LINKS = [
   { href: "/dashboard", label: "Decision Center" },
   { href: "/demand", label: "Demand" },
   { href: "/inventory", label: "Inventory" },
+  { href: "/optimization", label: "Optimization" },
 ];
 
 const RESEARCH_LINKS = [{ href: "/research", label: "Research Lab" }];

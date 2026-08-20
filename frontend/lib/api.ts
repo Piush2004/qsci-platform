@@ -85,6 +85,20 @@ export interface OptimizationRun {
   completed_at: string | null;
 }
 
+export interface CvrplibInstance {
+  instance: string;
+  num_nodes: number;
+  num_customers: number;
+  capacity: number;
+  n_vehicles_published: number;
+  coords: [number, number][];
+  demands: number[];
+  depot_index: number;
+  published_bks: number;
+  published_route_cost: number | null;
+  status: string;
+}
+
 export interface ConfidenceBreakdown {
   data_quality: number;
   forecast_stability: number | string;
@@ -144,6 +158,10 @@ export const api = {
       body: JSON.stringify({ problem_type: problemType, method, params }),
     }),
   getOptimization: (runId: number) => request<OptimizationRun>(`/optimization/${runId}`),
+  listOptimizations: (problemType?: string) =>
+    request<OptimizationRun[]>(`/optimization${problemType ? `?problem_type=${problemType}` : ""}`),
+  getInstance: (name: string) => request<CvrplibInstance>(`/optimize/instances/${name}`),
+  researchRouting: () => request<Record<string, unknown>>("/research/routing"),
 
   createRecommendation: (forecastRunId: number, leadTimeDays = 3.0) =>
     request<Recommendation>("/recommend", {

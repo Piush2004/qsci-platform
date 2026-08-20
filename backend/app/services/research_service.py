@@ -64,6 +64,30 @@ def get_scalability() -> dict:
     }
 
 
+def get_routing() -> dict:
+    """Phase 3's full N-sweep (76 rows: OR-Tools-on-QUBO / simulated
+    annealing / QAOA) + the penalty-sensitivity study -- powers the
+    Optimization page's pre-computed comparison and scalability views
+    without re-running any quantum solver."""
+    results = _load("routing_results.json")
+    penalty = _load("routing_penalty_sensitivity.json")
+    ground_truth = _load("routing_ground_truth.json")
+    if results is None:
+        return {"status": "PENDING", "note": "Phase 3 routing results not found on disk."}
+    return {
+        "status": "RESEARCH",
+        "source_files": ["routing_results.json", "routing_penalty_sensitivity.json", "routing_ground_truth.json"],
+        "results": results,
+        "penalty_sensitivity": penalty,
+        "ground_truth": ground_truth.get("cvrplib") if ground_truth else None,
+        "note": (
+            "OR-Tools-on-QUBO, simulated annealing, and QAOA all solve the identical QUBO -- fully fair "
+            "within this comparison. This is NOT directly comparable to OR-Tools' native CVRP solve (a "
+            "different, non-truncated problem) -- see docs/PHASE_3_FAIRNESS_AUDIT.md."
+        ),
+    }
+
+
 def get_noise() -> dict:
     data = _load("phase4_noise_and_scaling_results.json")
     if data is None:

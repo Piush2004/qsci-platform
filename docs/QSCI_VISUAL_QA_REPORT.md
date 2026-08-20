@@ -81,3 +81,30 @@ Milestone 0's "mobile (390×844)" testing used `chrome-devtools__resize_page(390
 - `/research`'s two JSON sections — still Milestone 6 scope.
 - Landing page multi-section redesign — still out of scope, per Milestone 0's rationale.
 - DecisionChain's own stage-button row still uses `overflow-x-auto` at narrow widths (swipeable, not lost, not fixed this milestone) — full mobile redesign remains Milestone 9 scope.
+
+## Milestone 2 — Optimization Intelligence
+
+### Desktop (1440×900)
+
+| Page/State | Result |
+|---|---|
+| `/optimization`, initial load | PASS — instance selector, problem-context card, Phase 3 N=4 comparison table (RESEARCH label, real 380.01/0.00%/Yes/runtime/resources values), all render with real data from `GET /optimize/instances/A-n32-k5`. |
+| `/optimization`, live `or_tools_qubo` run | PASS — comparison table updates from all-`N/A` to real cost/feasible/runtime/resources with a LIVE badge; a "Route" section appears with an SVG map (real coordinates) plus a `sr-only` textual route table. |
+| `/optimization`, live `simulated_annealing` run | PASS — second column populates (cost 380.01, feasible, RESEARCH badge, "1000 reads"), agrees with the OR-Tools-on-QUBO result and the Phase 3 pre-computed table. |
+| `/optimization`, instance switch (A-n32-k5 → A-n37-k5) | PASS — Customers (31→36) and Published BKS (784→669) live-update from the real endpoint; no stale data. |
+| `/optimization`, scalability charts | PASS — both SVG charts (annealing feasibility vs. num_reads; QAOA depth vs. runtime) render real Phase 4 data points with legends and `sr-only` textual-table equivalents. |
+
+### Mobile (environment-limited — see note)
+
+**Environment note**: neither `resize_page` nor `emulate({viewport: "390x844..."})` produced a true `window.innerWidth` of 390 in this session — both floored at ~516px regardless of the requested size, confirmed via repeated `evaluate_script` checks across fresh page loads. This did not reproduce Milestone 1's documented true-390px method. All mobile findings below are reported at the actually-achieved ~516px width, not claimed at 390px.
+
+| Page/State | Result |
+|---|---|
+| `/optimization` at ~516px, before fix | **FAIL** — `SolverComparisonTable`'s `<table className="w-full ...">` compressed to fit the viewport instead of overflowing, clipping the QAOA column's text (e.g. "QAC", "0.0", "40.") rather than making it scrollable. Both the Phase 3 pre-computed table and the live-run table were affected. Screenshotted as evidence before fixing. |
+| `/optimization` at ~516px, after fix | **PASS** — `min-w-[560px]` added to the table; both comparison tables now show a visible horizontal scrollbar and all columns (including QAOA) are fully legible when scrolled. Sidebar collapses to a hamburger menu correctly; buttons stack full-width; scalability charts and the "what does this mean" findings section render cleanly with no overflow. |
+| `/optimization` at ~516px, no live run yet | PASS — "Route" section correctly does not render (no fabricated route shown before a live run completes). |
+
+### Known Visual Gaps (Carried Forward)
+
+- True 390×844 mobile testing could not be performed this milestone due to the tooling floor described above — flagged for follow-up if resolved in a future session.
+- Tablet (768×1024) re-verification not repeated this milestone (same tooling floor prevented an exact 768px target; the desktop pass already covers the `lg` breakpoint transition).

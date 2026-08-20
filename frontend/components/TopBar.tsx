@@ -6,6 +6,7 @@ const ROUTE_META: Record<string, { group: string; label: string }> = {
   "/dashboard": { group: "Decide", label: "Decision Center" },
   "/demand": { group: "Decide", label: "Demand" },
   "/inventory": { group: "Decide", label: "Inventory" },
+  "/optimization": { group: "Decide", label: "Optimization" },
   "/research": { group: "Understand", label: "Research Lab" },
 };
 

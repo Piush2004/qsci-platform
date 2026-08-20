@@ -8,6 +8,8 @@ validated engine correctly."""
 
 from __future__ import annotations
 
+import pytest
+
 
 def test_health(client):
     r = client.get("/api/v1/health")
@@ -128,6 +130,21 @@ def test_optimize_or_tools_routing_is_live(client):
     assert body["objective"] > 0
 
 
+def test_optimize_or_tools_qubo_is_live_and_fair_reference(client):
+    """OR-Tools-on-QUBO (not native OR-Tools) is the actually-fair
+    classical reference for the QUBO-track comparison -- Phase 3's own
+    fairness audit finding, now exposed via the API for Milestone 2."""
+    r = client.post("/api/v1/optimize", json={
+        "problem_type": "routing", "method": "or_tools_qubo",
+        "params": {"cvrplib_instance": "A-n32-k5", "n_customers": 4},
+    })
+    assert r.status_code == 200
+    body = r.json()
+    assert body["label"] == "LIVE"
+    assert body["feasible"] is True
+    assert body["objective"] == pytest.approx(380.00755017228636, abs=1e-4)  # matches Phase 3's recorded N=4 result
+
+
 def test_optimize_annealing_routing_is_research(client):
     r = client.post("/api/v1/optimize", json={
         "problem_type": "routing", "method": "simulated_annealing",
@@ -161,6 +178,69 @@ def test_optimize_qaoa_run_created_pending_before_execution(client, db_session):
     run = optimization_service.create_run(db_session, "routing", "qaoa", {"n_customers": 4})
     assert run.run_status.value == "PENDING"
     assert run.label == "RESEARCH"
+
+
+def test_or_tools_solution_includes_coords_for_visualization(client):
+    r = client.post("/api/v1/optimize", json={
+        "problem_type": "routing", "method": "or_tools",
+        "params": {"cvrplib_instance": "A-n32-k5", "n_vehicles": 5, "time_limit_seconds": 10},
+    })
+    body = r.json()
+    assert "coords" in body["solution"]
+    assert len(body["solution"]["coords"]) == 32  # 31 customers + depot, verified Phase 0/3
+    assert body["solution"]["depot_index"] == 0
+
+
+def test_annealing_solution_includes_coords_for_visualization(client):
+    r = client.post("/api/v1/optimize", json={
+        "problem_type": "routing", "method": "simulated_annealing",
+        "params": {"cvrplib_instance": "A-n32-k5", "n_customers": 4, "num_reads": 200, "seed": 42},
+    })
+    body = r.json()
+    assert "coords" in body["solution"]
+    assert "depot_coord" in body["solution"]
+    assert len(body["solution"]["coords"]) == 4
+
+
+def test_list_optimizations(client):
+    client.post("/api/v1/optimize", json={
+        "problem_type": "routing", "method": "or_tools",
+        "params": {"cvrplib_instance": "A-n32-k5", "n_vehicles": 5, "time_limit_seconds": 10},
+    })
+    r = client.get("/api/v1/optimization")
+    assert r.status_code == 200
+    assert len(r.json()) >= 1
+
+
+def test_list_optimizations_filters_by_problem_type(client):
+    r = client.get("/api/v1/optimization?problem_type=routing")
+    assert r.status_code == 200
+    assert all(row["problem_type"] == "routing" for row in r.json())
+
+
+def test_get_instance_returns_real_cvrplib_data(client):
+    r = client.get("/api/v1/optimize/instances/A-n32-k5")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["num_customers"] == 31
+    assert body["published_bks"] == 784
+    assert len(body["coords"]) == 32
+    assert len(body["demands"]) == 32
+    assert body["status"] == "LIVE"
+
+
+def test_get_instance_unknown_name_404(client):
+    r = client.get("/api/v1/optimize/instances/not-a-real-instance")
+    assert r.status_code == 404
+
+
+def test_research_routing_labeled_research_with_fairness_note(client):
+    r = client.get("/api/v1/research/routing")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "RESEARCH"
+    assert len(body["results"]) == 76  # Phase 3's full N-sweep, verified this session
+    assert "NOT directly comparable" in body["note"]
 
 
 def test_optimization_get_invalid_id_404(client):

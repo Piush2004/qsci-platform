@@ -9,7 +9,7 @@ import { Card } from "@/components/Card";
 const MODELS = [
   { key: "seasonal_naive", label: "Seasonal Naive", note: "LIVE baseline — the honesty check on every claim" },
   { key: "lightgbm", label: "LightGBM", note: "LIVE — p10/p50/p90 quantile forecaster" },
-  { key: "vqr", label: "VQR (Quantum)", note: "RESEARCH — point forecaster, ~1-5 min to train" },
+  { key: "vqr", label: "VQR (Quantum)", note: "RESEARCH — point forecaster, ~10-15 min to train (COBYLA on a statevector simulator)" },
 ];
 
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {

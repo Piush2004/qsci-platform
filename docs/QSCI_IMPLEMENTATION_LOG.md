@@ -110,4 +110,49 @@ No changes to `qsci_core`, `DecisionChain`, or `WhyPanel`'s core rendering logic
 
 ### Commit
 
-Pending — see final report.
+`1a72c8b`
+
+## Milestone 2 — Optimization Intelligence + Classical vs Quantum Routing
+
+### Implemented
+
+- **`docs/MILESTONE_2_OPTIMIZATION_AUDIT.md`** (new): read-only pre-implementation audit of the existing OR-Tools/QUBO/annealing/QAOA stack, APIs, reusable Phase 3-5 experiment results, and the 4 backend gaps this milestone needed to fill — written before any code changed, per the milestone's mandate.
+- **Backend**: `GET /optimization` (list runs, optional `problem_type` filter), `GET /optimize/instances/{name}` (real CVRPLIB coordinates/demands/capacity/BKS for problem-context and route visualization, 404 on unknown instance), `GET /research/routing` (read-only exposure of `routing_results.json`/`routing_penalty_sensitivity.json`/ground truth with the Phase 3 fairness note attached), and a new live-triggerable method `or_tools_qubo` (`solve_qubo_with_ortools` — CP-SAT on the identical QUBO) added as the classical, genuinely-fair reference point for the 3-way QUBO-track comparison, since native OR-Tools solves a different, non-comparable problem. `_run_or_tools`/`_run_qubo_track` extended to return real coordinates in their `solution` dict so a live run's route can be visualized without a second round-trip.
+- **Frontend `/optimization` page** (new): instance selector (4 real CVRPLIB instances) → problem context → Phase 3's pre-computed N=4 solution comparison (RESEARCH) → a live 3-way comparison the user can trigger against the real backend → route visualization → scalability charts (real Phase 4 annealing-feasibility-vs-num_reads and QAOA-depth-vs-runtime data) → a real, structured "what does this mean" section → a disclosed-PENDING decision-implication section (no fabricated dollar figure — routing isn't wired into the Recommendation/Approval/Audit chain yet).
+- **New components**: `SolverComparisonTable` (Cost/Gap/Feasible/Runtime/Resources/Evidence rows, never a "winner" badge), `RouteVisualization` (SVG map from real Euclidean CVRPLIB coordinates, click-to-highlight, `sr-only` textual-table equivalent), `ScalabilityChart` (dependency-free SVG line chart, `sr-only` textual-table equivalent).
+- **8 new backend tests** covering coords-in-solution, run listing (+ filter), the real-instance endpoint (+ 404), the fairness-noted research payload, and an exact-value regression check (`objective == pytest.approx(380.00755017228636)`) that the new `or_tools_qubo` live endpoint reproduces Phase 3's recorded N=4 result.
+- **Copy fix**: VQR's "~1-5 min to train" label understated its real measured runtime (731.7s / ~12.2 min, live-verified this milestone) — corrected to "~10-15 min."
+
+### Real bugs found and fixed
+
+1. **Mobile table clipping** — `SolverComparisonTable`'s `<table className="w-full ...">` compressed columns to fit the viewport instead of triggering the wrapper's `overflow-x-auto`, clipping the QAOA column's text at narrow widths. Fixed with a `min-w-[560px]` floor so the table overflows (and scrolls) instead of squeezing. Found via live narrow-viewport testing, not desktop review.
+2. **VQR runtime label inaccurate** — see Copy fix above; a real "PENDING"-adjacent honesty gap (claim didn't match the live-measured value) rather than a rendering bug.
+3. **React Compiler lint** (`react-hooks/immutability`) on the live-run polling loop — same reassignment-across-`await` pattern as Milestone 1's `/demand` fix; resolved identically with a recursive `pollUntilSettled(method, run, attemptsLeft)` helper instead of a mutated `let`.
+
+### Tested
+
+- `npx tsc --noEmit`: 0 errors. `npm run lint`: 0 errors. `npm run build`: succeeds, all 6 routes (`/`, `/dashboard`, `/demand`, `/inventory`, `/optimization`, `/research`).
+- `backend/tests/`: 50/50 passed (844.5s), including all 8 new Milestone 2 tests.
+- Root `qsci_core` suite: 176 passed, 1 xfailed — unchanged from the pre-milestone baseline, 0 regressions.
+
+### Browser Verified
+
+Real backend (port 8010), 1440×900: instance switch (A-n32-k5 → A-n37-k5) live-updates Customers/BKS from the real endpoint; live `or_tools_qubo` run returns cost 380.01/feasible/LIVE with a rendered route from real coordinates; live `simulated_annealing` run returns the same cost/feasible with a RESEARCH label and real `num_reads` resource string — both agree with the pre-computed Phase 3 N=4 table. `GET /optimize/instances/NOT-REAL` correctly 404s with a clear message. No console errors across any of the above.
+
+**Step 19 (non-deferrable per the milestone prompt)**: `/demand`'s three forecast buttons live-verified against the real backend — Seasonal Naive (wMAPE 37.15%, RMSE 24.50, instant), LightGBM (wMAPE 25.56%, RMSE 18.08, 4.1s — beats naive as expected), VQR (wMAPE 390.34%, RMSE 217.61, 731.7s — dramatically worse than both classical models, consistent with H1's default expectation; honest "forecast stability: NOT AVAILABLE FOR THIS MODEL" disclosure rendered correctly, no fabricated confidence). `/inventory` live-verified: real qsci_core-computed reorder points/stockout risk/status per row, SKU link correctly navigates into the Decision Center, which renders an honest loading state rather than fabricated data.
+
+### Visual QA
+
+Desktop (1440×900) fully verified — see screenshots taken during this session. **Environment note**: neither `resize_page` nor `emulate({viewport: "390x844..."})` could get `window.innerWidth` below ~516px in this session regardless of requested width (a tooling/environment ceiling that did not reproduce Milestone 1's documented true-390px method) — all "mobile" testing this milestone was done at the achievable ~516px floor, not true 390×844, and is reported as such rather than claimed at 390px.
+
+### Accessibility
+
+`RouteVisualization` and `ScalabilityChart` both ship `sr-only` textual-table equivalents of their SVG content (verified present in the live accessibility snapshot, not just in source) plus `<title>` tooltips on interactive SVG elements. Route/scalability images carry descriptive `aria-label`s.
+
+### Regression Protection
+
+No changes to `DecisionChain`, `WhyPanel`, or the Approve/Modify/Reject flow's logic. `/dashboard`'s recommendation → approval → audit path re-verified working (SKU link from `/inventory` navigates in and renders an honest loading state) with no regressions.
+
+### Commit
+
+`phase-6: build optimization intelligence` — see final report.

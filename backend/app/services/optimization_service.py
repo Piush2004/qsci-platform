@@ -15,19 +15,20 @@ from qsci_core.data import loaders
 from qsci_core.financial.eoq import CostAssumptions, economic_order_quantity, safety_stock
 from qsci_core.optimization.classical.or_tools_vrp import solve_cvrp
 from qsci_core.optimization.quantum.annealing_solver import solve_qubo_with_annealing
+from qsci_core.optimization.quantum.classical_qubo_solver import solve_qubo_with_ortools
 from qsci_core.optimization.quantum.decoder import decode_qubo_sample
 from qsci_core.optimization.quantum.instance_builder import build_derived_instance
 from qsci_core.optimization.quantum.qaoa_solver import solve_qubo_with_qaoa
 from qsci_core.optimization.quantum.qubo_formulator import build_cvrp_qubo
 from qsci_core.persistence.models import OptimizationRunRecord, RunStatus
 
-SUPPORTED_METHODS = {"eoq", "or_tools", "simulated_annealing", "qaoa"}
+SUPPORTED_METHODS = {"eoq", "or_tools", "or_tools_qubo", "simulated_annealing", "qaoa"}
 
 
 def create_run(db: Session, problem_type: str, method: str, input_params: dict) -> OptimizationRunRecord:
     if method not in SUPPORTED_METHODS:
         raise ValueError(f"unsupported method '{method}', must be one of {sorted(SUPPORTED_METHODS)}")
-    label = "ILLUSTRATIVE" if method == "eoq" else ("LIVE" if method in ("or_tools",) else "RESEARCH")
+    label = "ILLUSTRATIVE" if method == "eoq" else ("LIVE" if method in ("or_tools", "or_tools_qubo") else "RESEARCH")
     run = OptimizationRunRecord(
         problem_type=problem_type, method=method, run_status=RunStatus.PENDING,
         label=label, input_params=input_params,
@@ -51,7 +52,7 @@ def execute_run(db: Session, run_id: int) -> None:
             objective, solution, feasible, resource_metrics = _run_eoq(run.input_params)
         elif run.method == "or_tools":
             objective, solution, feasible, resource_metrics = _run_or_tools(run.input_params)
-        elif run.method in ("simulated_annealing", "qaoa"):
+        elif run.method in ("or_tools_qubo", "simulated_annealing", "qaoa"):
             objective, solution, feasible, resource_metrics = _run_qubo_track(run.method, run.input_params)
         else:
             raise ValueError(f"unsupported method '{run.method}'")
@@ -96,7 +97,17 @@ def _run_or_tools(params: dict) -> tuple[float, dict, bool, dict]:
         n_vehicles=params.get("n_vehicles", 5), time_limit_seconds=params.get("time_limit_seconds", 10),
     )
     feasible = result.status != "INFEASIBLE"
-    return (result.total_distance or 0.0), {"routes": result.routes, "vehicles_used": result.vehicles_used, "status": result.status}, feasible, {}
+    solution = {
+        "routes": result.routes, "vehicles_used": result.vehicles_used, "status": result.status,
+        # Real coordinates for route visualization -- node 0 is the depot
+        # by CVRPLIB convention (qsci_core.optimization.quantum.instance_builder
+        # uses the same convention); routes reference full-instance node
+        # indices (depot included at index 0), not the customer-only
+        # indexing the QUBO track uses.
+        "coords": coords.tolist() if hasattr(coords, "tolist") else list(coords),
+        "depot_index": 0,
+    }
+    return (result.total_distance or 0.0), solution, feasible, {}
 
 
 def _run_qubo_track(method: str, params: dict) -> tuple[float, dict, bool, dict]:
@@ -104,7 +115,10 @@ def _run_qubo_track(method: str, params: dict) -> tuple[float, dict, bool, dict]
     di = build_derived_instance(params.get("cvrplib_instance", "A-n32-k5"), n_customers)
     qi = build_cvrp_qubo(di.coords, di.demands, di.capacity, di.n_vehicles, penalty_multiplier=params.get("penalty_multiplier", 2.0))
 
-    if method == "simulated_annealing":
+    if method == "or_tools_qubo":
+        res = solve_qubo_with_ortools(qi, time_limit_seconds=params.get("time_limit_seconds", 30))
+        resource_metrics = {"solver": "CP-SAT (quadratic objective, identical QUBO)", "status": res.status}
+    elif method == "simulated_annealing":
         res = solve_qubo_with_annealing(qi, num_reads=params.get("num_reads", 1000), seed=params.get("seed", 42))
         resource_metrics = {"num_reads": res.num_reads, "backend": res.backend}
     else:  # qaoa
@@ -121,9 +135,49 @@ def _run_qubo_track(method: str, params: dict) -> tuple[float, dict, bool, dict]
     solution = {
         "routes": decoded.routes, "vehicle_loads": decoded.vehicle_loads,
         "feasibility_reason": decoded.feasibility_reason, "instance_status": di.status,
+        # Real coordinates for route visualization -- customer-only
+        # indexing here (matches decoded.routes' indices), depot given
+        # separately since it isn't part of the customer array.
+        "coords": di.coords.tolist(), "depot_coord": di.depot_coord.tolist(),
     }
     return (decoded.total_cost if decoded.feasible else 0.0), solution, decoded.feasible, resource_metrics
 
 
 def get_run(db: Session, run_id: int) -> OptimizationRunRecord | None:
     return db.get(OptimizationRunRecord, run_id)
+
+
+def list_runs(db: Session, problem_type: str | None = None) -> list[OptimizationRunRecord]:
+    q = db.query(OptimizationRunRecord).order_by(OptimizationRunRecord.created_at.desc())
+    if problem_type is not None:
+        q = q.filter(OptimizationRunRecord.problem_type == problem_type)
+    return q.limit(200).all()
+
+
+# The 4 real CVRPLIB instances verified in Phase 0/3 (published BKS
+# cross-checked against raw .sol files) -- the only instances this
+# endpoint will serve, never an invented one.
+_KNOWN_INSTANCE_BKS = {
+    "A-n32-k5": 784, "A-n33-k5": 661, "A-n37-k5": 669, "B-n31-k5": 672,
+}
+
+
+def get_instance_info(name: str) -> dict:
+    if name not in _KNOWN_INSTANCE_BKS:
+        raise ValueError(f"unknown CVRPLIB instance '{name}', must be one of {sorted(_KNOWN_INSTANCE_BKS)}")
+    instance, solution = loaders.load_cvrplib_instance(name)
+    coords = instance["node_coord"]
+    demands = instance["demand"]
+    return {
+        "instance": name,
+        "num_nodes": len(coords),
+        "num_customers": len(coords) - 1,
+        "capacity": float(instance["capacity"]),
+        "n_vehicles_published": int(name.rsplit("k", 1)[-1]),
+        "coords": coords.tolist() if hasattr(coords, "tolist") else list(coords),
+        "demands": demands.tolist() if hasattr(demands, "tolist") else list(demands),
+        "depot_index": 0,
+        "published_bks": _KNOWN_INSTANCE_BKS[name],
+        "published_route_cost": solution.get("cost") if solution else None,
+        "status": "LIVE",
+    }

@@ -7,7 +7,7 @@ from app.services import optimization_service
 
 router = APIRouter(tags=["optimize"])
 
-SYNCHRONOUS_METHODS = {"eoq", "or_tools", "simulated_annealing"}
+SYNCHRONOUS_METHODS = {"eoq", "or_tools", "or_tools_qubo", "simulated_annealing"}
 
 
 def _run_in_own_session(run_id: int) -> None:
@@ -39,3 +39,16 @@ def get_optimization(run_id: int, db: Session = Depends(get_db)) -> Optimization
     if run is None:
         raise HTTPException(status_code=404, detail=f"no optimization run with id={run_id}")
     return OptimizationRunResponse.model_validate(run)
+
+
+@router.get("/optimization", response_model=list[OptimizationRunResponse])
+def list_optimizations(problem_type: str | None = None, db: Session = Depends(get_db)) -> list[OptimizationRunResponse]:
+    return [OptimizationRunResponse.model_validate(r) for r in optimization_service.list_runs(db, problem_type)]
+
+
+@router.get("/optimize/instances/{name}")
+def get_instance(name: str) -> dict:
+    try:
+        return optimization_service.get_instance_info(name)
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

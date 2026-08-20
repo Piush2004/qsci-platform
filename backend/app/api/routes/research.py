@@ -23,3 +23,8 @@ def scalability() -> dict:
 @router.get("/noise")
 def noise() -> dict:
     return research_service.get_noise()
+
+
+@router.get("/routing")
+def routing() -> dict:
+    return research_service.get_routing()

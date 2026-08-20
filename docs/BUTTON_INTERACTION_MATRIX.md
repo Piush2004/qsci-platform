@@ -43,10 +43,34 @@ Status: **PARTIAL** — covers the Golden Path surface built so far (dashboard, 
 
 ## Not yet covered (disclosed, not silently skipped)
 
-- `/inventory` and `/demand` interactive elements (the actual forecast-run buttons) not re-verified live in-browser this milestone — only their mobile layout was.
 - No Playwright test suite exists yet — all "PASS" verdicts above are either manual Chrome-driven verification (this session) or backend API-test evidence, not automated browser regression tests.
 - No persona-based testing (executive/planner/analyst/researcher/adversarial/mobile/etc.) has been run.
 - No formal accessibility (a11y) audit has been run — ARIA wiring on `ModifyPanel`'s validation was spot-checked (`aria-invalid`, `aria-describedby`, `role="alert"` all confirmed present in the a11y tree) but not a full WCAG 2.2 AA pass.
 - No 10-round adversarial E2E sweep has been run.
-- Marketing page beyond the single landing hero, `/settings`, `/scenarios`, `/copilot`, `/models`, `/data`, `/risk`, `/optimization` pages do not exist yet.
-- Tablet (768px) re-verification not repeated this milestone (Milestone 0's tablet screenshot was accurate — the ~500px floor issue only affected the *mobile* claim, since 768px tablet testing used the same tool but at a size the floor didn't clip).
+- Marketing page beyond the single landing hero, `/settings`, `/scenarios`, `/copilot`, `/models`, `/data`, `/risk` pages do not exist yet.
+- Tablet (768px) re-verification not repeated in Milestone 2 (see the tooling-floor note below).
+
+## Milestone 2 — Optimization Intelligence
+
+**Step 19 note**: Milestone 1 left `/demand`'s and `/inventory`'s actual interactive elements as "API-test evidence only, not browser-verified." Both are live-verified below, closing that gap.
+
+| Location | Element | Action | Expected | Actual | API | Status | Evidence |
+|---|---|---|---|---|---|---|---|
+| `/demand` | "Run forecast" (Seasonal Naive) | Click | Runs `POST /forecast` (seasonal_naive), shows COMPLETE with real wMAPE/RMSE/Bias/Runtime | wMAPE 37.15%, RMSE 24.50, Bias 15.50, Runtime 0.000s | `/forecast` | PASS | Snapshot, this session |
+| `/demand` | "Run forecast" (LightGBM) | Click | Runs `POST /forecast` (lightgbm), completes with real p10/p50/p90-derived metrics, beats naive | wMAPE 25.56%, RMSE 18.08, Bias 10.37, Runtime 4.116s — beats Seasonal Naive as expected | `/forecast` | PASS | Snapshot, this session |
+| `/demand` | "Run forecast" (VQR) | Click | Runs `POST /forecast` (vqr), async job polls to COMPLETE, real metrics, honest "forecast stability: NOT AVAILABLE" disclosure | wMAPE 390.34%, RMSE 217.61, Bias 209.39, Runtime 731.684s (~12.2 min) — dramatically worse than both classical models, consistent with H1's default expectation; no fabricated confidence shown | `/forecast`, polled `/forecast/{id}` | PASS | `curl /forecast/7` + snapshot, this session |
+| `/inventory` | Table row | Render | Real qsci_core-computed forecast/reorder-point/suggested-order/stockout-risk/confidence/status per SKU | Real values shown (e.g. reorder point 217.0, stockout risk 0.0%/LOW, confidence 83%, status APPROVED) | `/inventory` (backing data) | PASS | Snapshot, this session |
+| `/inventory` | SKU name link | Click | Navigates to `/dashboard`, selects that recommendation | Navigates correctly; Decision Center shows an honest "Loading…" / "PENDING DECISIONS (0)" state rather than fabricated data while it fetches | — | PASS | Screenshot, this session |
+| `/optimization` | Instance selector | Change (A-n32-k5 → A-n37-k5) | Live-updates Customers/Vehicles/Capacity/BKS from `GET /optimize/instances/{name}` | Customers 31→36, BKS 784→669 | `/optimize/instances/{name}` | PASS | Snapshot, this session |
+| `/optimization` | "Run OR-Tools (on QUBO)" | Click | `POST /optimize` (or_tools_qubo), synchronous, comparison table updates from N/A to real values, LIVE badge, route renders | Cost 380.01, feasible, runtime 0.175s, "CP-SAT (quadratic objective, identical QUBO)", route SVG + textual table rendered | `/optimize` | PASS | Snapshot + screenshot, this session |
+| `/optimization` | "Run Simulated Annealing" | Click | `POST /optimize` (simulated_annealing), synchronous, comparison table's 2nd column updates | Cost 380.01, feasible, runtime 0.166s, "1000 reads", RESEARCH badge — agrees with the OR-Tools-on-QUBO result | `/optimize` | PASS | Snapshot, this session |
+| `/optimize/instances/{name}` | (error path) | `GET` an unknown instance name | 404 with a clear error message | `{"detail":"unknown CVRPLIB instance 'NOT-REAL', must be one of [...]"}`, HTTP 404 | `/optimize/instances/NOT-REAL` | PASS | `curl`, this session |
+
+### Real bugs found and fixed this milestone
+
+1. **Mobile table clipping** — `SolverComparisonTable`'s `<table className="w-full ...">` compressed columns to fit the narrow viewport instead of triggering horizontal scroll, clipping the QAOA column's text. Fixed with `min-w-[560px]`; re-verified with a visible scrollbar and fully legible columns.
+2. **VQR runtime label inaccurate** — "~1-5 min to train" undersold the real measured 731.7s (~12.2 min) runtime observed during this milestone's live Step 19 verification. Corrected to "~10-15 min."
+
+### Environment note (mobile tooling)
+
+Neither `resize_page` nor `emulate({viewport: "390x844..."})` produced a true 390px `window.innerWidth` in this session (floored at ~516px regardless of requested size) — this did not reproduce Milestone 1's documented true-390px method. All Milestone 2 "mobile" verification above was done at the achievable ~516px width and is reported as such, not claimed at 390px.
