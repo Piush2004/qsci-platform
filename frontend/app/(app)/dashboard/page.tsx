@@ -1,19 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, ApiError, type AuditEvent, type Recommendation } from "@/lib/api";
+import {
+  api, ApiError, type AuditEvent, type BaselineComparison, type OutcomeResult, type Recommendation,
+} from "@/lib/api";
 import { DecisionChain } from "@/components/DecisionChain";
 import { WhyPanel } from "@/components/WhyPanel";
-import { StatusPill } from "@/components/StatusPill";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { ModifyPanel } from "@/components/ModifyPanel";
+import { DecisionCard } from "@/components/DecisionCard";
+import { OutcomeSection } from "@/components/OutcomeSection";
+import { BaselineComparisonCard } from "@/components/BaselineComparisonCard";
+import { ConfidenceExplainer } from "@/components/ConfidenceExplainer";
+import { RiskExplainer } from "@/components/RiskExplainer";
 
 export default function DashboardPage() {
   const [recs, setRecs] = useState<Recommendation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [outcome, setOutcome] = useState<OutcomeResult | null>(null);
+  const [baseline, setBaseline] = useState<BaselineComparison | null>(null);
   const [generating, setGenerating] = useState(false);
   const [actionApprover, setActionApprover] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
@@ -47,6 +55,14 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const refreshOutcome = useCallback(async (id: number) => {
+    try {
+      setOutcome(await api.getOutcome(id));
+    } catch {
+      setOutcome(null);
+    }
+  }, []);
+
   useEffect(() => {
     api
       .listRecommendations()
@@ -66,6 +82,14 @@ export default function DashboardPage() {
       .audit(selectedId)
       .then(setAuditEvents)
       .catch(() => setAuditEvents([]));
+    api
+      .getOutcome(selectedId)
+      .then(setOutcome)
+      .catch(() => setOutcome(null));
+    api
+      .getBaseline(selectedId)
+      .then(setBaseline)
+      .catch(() => setBaseline(null));
   }, [selectedId]);
 
   const selected = recs?.find((r) => r.id === selectedId) ?? null;
@@ -98,7 +122,7 @@ export default function DashboardPage() {
       // testing bug: the audit panel previously went stale after
       // approve/reject because only `selectedId` changes triggered a
       // refetch, and it doesn't change here).
-      await Promise.all([load(), refreshAudit(selected.id)]);
+      await Promise.all([load(), refreshAudit(selected.id), refreshOutcome(selected.id)]);
     } catch (e) {
       // A 409 here is the backend's real invalid-state-transition guard
       // (e.g. double-approval) -- its message is shown verbatim, not
@@ -115,7 +139,7 @@ export default function DashboardPage() {
     setError(null);
     try {
       await api.modify(selected.id, actionApprover, qty, reason);
-      await Promise.all([load(), refreshAudit(selected.id)]);
+      await Promise.all([load(), refreshAudit(selected.id), refreshOutcome(selected.id)]);
       setModifyOpen(false);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Backend unavailable");
@@ -157,32 +181,27 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-2">
-          <h2 className="text-caption uppercase">Pending decisions ({pending.length})</h2>
+          <h2 className="text-caption uppercase">Decisions requiring attention ({pending.length} pending)</h2>
           {recs?.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => setSelectedId(r.id)}
-              className={`block w-full rounded-md border px-3 py-2 text-left text-sm transition-colors duration-[var(--duration-fast)] ${
-                selectedId === r.id ? "border-accent bg-accent/10" : "border-border hover:bg-border/30"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{r.sku_id}</span>
-                <StatusPill label={r.status} />
-              </div>
-              <p className="mt-1 text-xs text-muted">
-                Order {r.suggested_order_qty.toFixed(0)} units · confidence {(r.confidence_overall * 100).toFixed(0)}%
-              </p>
-            </button>
+            <DecisionCard key={r.id} rec={r} selected={selectedId === r.id} onClick={() => setSelectedId(r.id)} />
           ))}
         </div>
 
         <div className="motion-fade-in space-y-4" key={selected?.id ?? "none"}>
           {selected ? (
             <>
-              <DecisionChain rec={selected} auditEvents={auditEvents} />
+              <h2 className="text-caption uppercase text-muted">Why this decision</h2>
+              <DecisionChain rec={selected} auditEvents={auditEvents} outcome={outcome} />
               <WhyPanel rec={selected} />
 
+              <h2 className="text-caption uppercase text-muted">Business impact</h2>
+              <BaselineComparisonCard comparison={baseline} />
+
+              <h2 className="text-caption uppercase text-muted">Confidence</h2>
+              <ConfidenceExplainer rec={selected} />
+              <RiskExplainer rec={selected} />
+
+              <h2 className="text-caption uppercase text-muted">Human decision</h2>
               {selected.status === "PENDING" && !modifyOpen && (
                 <Card className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <label htmlFor="approver-name" className="sr-only">
@@ -230,6 +249,9 @@ export default function DashboardPage() {
                   onSubmit={submitModify}
                 />
               )}
+
+              <h2 className="text-caption uppercase text-muted">Outcome</h2>
+              <OutcomeSection outcome={outcome} />
             </>
           ) : (
             <p className="text-sm text-muted">Select a recommendation to inspect its evidence chain.</p>

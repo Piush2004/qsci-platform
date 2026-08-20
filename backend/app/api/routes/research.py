@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from app.services import research_service
+from app.db.session import get_db
+from app.services import recommendation_service, research_service
 
 router = APIRouter(prefix="/research", tags=["research"])
 
@@ -28,3 +30,8 @@ def noise() -> dict:
 @router.get("/routing")
 def routing() -> dict:
     return research_service.get_routing()
+
+
+@router.get("/accuracy-vs-outcome")
+def accuracy_vs_outcome(series_id: str = "FOODS_3_090_CA_1_evaluation", db: Session = Depends(get_db)) -> dict:
+    return recommendation_service.get_accuracy_vs_outcome(db, series_id)

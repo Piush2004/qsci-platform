@@ -31,7 +31,7 @@ def get_session(engine) -> Session:
     return sessionmaker(bind=engine)()
 
 
-def persist_recommendation(session: Session, rec: Recommendation) -> RecommendationRecord:
+def persist_recommendation(session: Session, rec: Recommendation, forecast_run_id: int | None = None) -> RecommendationRecord:
     row = RecommendationRecord(
         sku_id=rec.sku_id,
         forecast_p10=rec.forecast_p10,
@@ -45,6 +45,7 @@ def persist_recommendation(session: Session, rec: Recommendation) -> Recommendat
         confidence_breakdown=rec.confidence.to_dict(),
         financial_impact=rec.financial_impact,
         rationale=rec.rationale,
+        forecast_run_id=forecast_run_id,
     )
     session.add(row)
     session.flush()

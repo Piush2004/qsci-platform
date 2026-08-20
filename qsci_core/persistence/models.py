@@ -48,6 +48,10 @@ class RecommendationRecord(Base):
     sku_id: Mapped[str] = mapped_column(String(64), index=True)
     status: Mapped[RecommendationStatus] = mapped_column(Enum(RecommendationStatus), default=RecommendationStatus.PENDING)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # Nullable: recommendations persisted before Milestone 3 have no link.
+    # Lets the outcome layer recover the real held-out test-window actuals
+    # for THIS forecast run, instead of re-guessing which run produced it.
+    forecast_run_id: Mapped[int | None] = mapped_column(ForeignKey("forecast_runs.id"), nullable=True, index=True)
 
     forecast_p10: Mapped[float] = mapped_column(Float)
     forecast_p50: Mapped[float] = mapped_column(Float)

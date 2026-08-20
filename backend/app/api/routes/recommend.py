@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.schemas import (
-    ApprovalActionRequest, AuditEventResponse, RecommendationResponse, RecommendRequest,
+    ApprovalActionRequest, AuditEventResponse, OutcomeRequest, RecommendationResponse,
+    RecommendRequest,
 )
-from app.services import recommendation_service
-from qsci_core.persistence.db import record_approval
+from app.services import outcome_service, recommendation_service
+from qsci_core.persistence.db import record_approval, record_outcome
 from qsci_core.persistence.models import ApprovalDecision, AuditRecord, RecommendationRecord
 
 router = APIRouter(tags=["recommend"])
@@ -70,3 +71,28 @@ def audit(recommendation_id: int | None = None, db: Session = Depends(get_db)) -
     if recommendation_id is not None:
         q = q.filter(AuditRecord.recommendation_id == recommendation_id)
     return [AuditEventResponse.model_validate(r) for r in q.limit(200).all()]
+
+
+@router.get("/recommendations/{rec_id}/outcome")
+def get_outcome(rec_id: int, db: Session = Depends(get_db)) -> dict:
+    try:
+        return outcome_service.get_outcome(db, rec_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/recommendations/{rec_id}/outcome")
+def post_outcome(rec_id: int, req: OutcomeRequest, db: Session = Depends(get_db)) -> dict:
+    try:
+        record_outcome(db, rec_id, req.actual_qty_ordered, req.actual_demand_observed, req.notes)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return outcome_service.get_outcome(db, rec_id)
+
+
+@router.get("/recommendations/{rec_id}/baseline")
+def get_baseline(rec_id: int, db: Session = Depends(get_db)) -> dict:
+    try:
+        return recommendation_service.get_baseline_comparison(db, rec_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

@@ -156,3 +156,47 @@ No changes to `DecisionChain`, `WhyPanel`, or the Approve/Modify/Reject flow's l
 ### Commit
 
 `phase-6: build optimization intelligence` — see final report.
+
+## Milestone 3 — Outcome & Financial Decision Intelligence
+
+### Implemented
+
+- **Schema**: `RecommendationRecord.forecast_run_id` (nullable FK to `forecast_runs.id`), added via a real Alembic migration (`a513201f3233_add_forecast_run_id_to_recommendations.py`, batch mode for SQLite's ALTER TABLE limitation), applied to the dev DB — all 4 pre-existing rows preserved with `forecast_run_id=NULL`.
+- **`backend/app/services/outcome_service.py`** (new): `get_outcome` — real M5 held-out test-window sales as the "backtest actual" for any recommendation with a linked forecast run, honestly distinguished (`kind: "backtest_actual"`) from a live post-decision outcome (`kind: "manual"`, via the pre-existing-but-unwired `qsci_core.persistence.db.record_outcome`). Manual entries take precedence when present.
+- **`recommendation_service.py` additions**: `compute_recommendation` extracted as a pure (non-persisting) function shared by the recommend endpoint, `get_baseline_comparison`, and `get_accuracy_vs_outcome` — one implementation of the FORECAST→RISK→FINANCIAL→CONFIDENCE math, not three. `get_baseline_comparison` (Step 3) pairs a recommendation's model against a same-series/horizon `seasonal_naive` run when one exists on file, PENDING otherwise. `get_accuracy_vs_outcome` (Step 4) pairs each distinct model's real wMAPE against its financial total cost, PENDING below 2 models.
+- **New endpoints**: `GET`/`POST /recommendations/{id}/outcome`, `GET /recommendations/{id}/baseline`, `GET /research/accuracy-vs-outcome`.
+- **New frontend components**: `DecisionCard` (Step 9 — compact list card), `OutcomeSection`, `BaselineComparisonCard`, `ConfidenceExplainer` (Step 6, grounded in the selected recommendation's own real decomposition, not a canned example), `RiskExplainer` (Step 7, built entirely from already-returned fields — no new backend needed), `AccuracyOutcomeScatter` (Step 4, a scatter not a line — connecting points would imply an ordering the models don't have).
+- **`DecisionChain`** gained a 9th stage, **Outcome**, driven by the same `OutcomeResult` object the dashboard fetches for the `OutcomeSection`.
+- **`/dashboard`** restructured into Step 8's exact hierarchy: Decisions requiring attention → Why this decision → Business impact → Confidence → Human decision → Outcome.
+- **`/research`** gained a "Forecast accuracy vs. business outcome (RQ2/H2)" section with the new scatter chart.
+- **Scope decision** (disclosed, not silent): no separate recommendation-detail route was added for Step 13 — `/dashboard`'s existing list+detail-pane layout already satisfies the "rich detail view" requirement and was enriched in place rather than duplicated into a second route. See `docs/MILESTONE_3_OUTCOME_AUDIT.md` §9.
+
+### Real bugs found and fixed
+
+1. **Accuracy-vs-outcome scatter label clipped off-canvas** — VQR's real wMAPE (390%, dramatically worse than the classical models) placed its point at the far right of the plot, and its text label ran past the SVG's `viewBox` boundary, rendering invisible. Fixed: labels within 60px of the right edge flip to render left of their point (`text-anchor="end"`), verified with a reload + screenshot.
+
+### Tested
+
+- `npx tsc --noEmit`: 0 errors. `npm run lint`: 0 errors. `npm run build`: succeeds, all 6 routes unchanged.
+- `backend/tests/`: 60/60 passed (851.8s), including all 11 new Milestone 3 tests (outcome LIVE/manual/negative-rejected/404, baseline PENDING/LIVE/own-model-is-baseline, accuracy-vs-outcome PENDING/LIVE, `forecast_run_id` round-trip).
+- Root `tests/` (qsci_core) suite: unchanged pass count from the Milestone 2 baseline (176 passed, 1 xfailed) — this milestone touched only `qsci_core/persistence/models.py` (additive column) and `qsci_core/persistence/db.py` (additive `forecast_run_id` parameter, default `None`), no qsci_core test depends on either.
+
+### Browser Verified
+
+Real backend (port 8010) at 1440×900: created a fresh LightGBM recommendation end-to-end and confirmed `forecast_run_id` populated; outcome LIVE with real predicted-vs-actual (64.0 vs. 53.6, M5 held-out sales); baseline LIVE comparing seasonal_naive (wMAPE 37.2, cost $3,550.7) against the lightgbm decision (wMAPE 25.6, cost $1,463.6) — both real, both ILLUSTRATIVE-labeled where appropriate; full Approve flow (fill approver → click Approve → backend-confirmed status change → DecisionChain's Human Decision stage LIVE → Outcome section persists). Adversarial: invalid recommendation id 404s on both new endpoints, negative outcome value 422s, unknown series_id on accuracy-vs-outcome returns PENDING with an empty point list — no fabricated fallback anywhere. Pre-Milestone-3 recommendations (`forecast_run_id=null`) correctly show PENDING outcome/baseline with a specific, honest explanation.
+
+### Mobile
+
+True 390×844 this time (`emulate` produced a genuine `window.innerWidth===390`, unlike Milestone 2's ~516px floor) — `DecisionCard` list, confidence decomposition grid, `RiskExplainer`'s `<dl>` (wraps instead of clipping), and `BaselineComparisonCard`'s table (`min-w-[420px]` inside `overflow-x-auto`, visible scrollbar) all verified clean at true mobile width. See `docs/QSCI_VISUAL_QA_REPORT.md`'s Milestone 3 section.
+
+### Accessibility
+
+`AccuracyOutcomeScatter` ships an `sr-only` textual-table equivalent (model/wMAPE/total_cost/evidence) and per-point `<title>` tooltips, consistent with Milestone 2's chart components. Confidence/risk/baseline/outcome cards use real `<dl>`/`<table>`/heading structure, not div soup.
+
+### Regression Protection
+
+`/inventory`, `/optimization`, and `/demand` unchanged this milestone except the VQR-runtime copy fix already shipped in Milestone 2 — spot-verified at 390px with no new issues. The Approve/Modify/Reject flow's underlying logic (`decide`/`submitModify`) is unchanged; only its data-refresh set grew to include `refreshOutcome`.
+
+### Commit
+
+`phase-6: connect financial impact confidence and outcomes` — see final report.

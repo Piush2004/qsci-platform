@@ -457,3 +457,108 @@ def test_research_noise_discloses_caveat(client):
     body = r.json()
     assert "caveat" in body
     assert "PENDING" in body["caveat"]
+
+
+# ---- Milestone 3: outcome / baseline / accuracy-vs-outcome ----
+
+
+def test_recommendation_response_includes_forecast_run_id(client):
+    fc = client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    assert rec["forecast_run_id"] == fc["id"]
+
+
+def test_outcome_is_live_backtest_actual_from_real_m5_test_window(client):
+    """The forecast run's held-out test window is real M5 historical sales
+    (already used to compute wMAPE) -- the outcome endpoint must expose it
+    as a real, LIVE 'backtest_actual', honestly distinguished from a live
+    post-decision outcome, never PENDING when this data plainly exists."""
+    fc = client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.get(f"/api/v1/recommendations/{rec['id']}/outcome")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "LIVE"
+    assert body["kind"] == "backtest_actual"
+    assert "not a live post-decision outcome" in body["note"]
+    assert isinstance(body["actual_demand"], float)
+    assert body["error"] == pytest.approx(body["actual_demand"] - body["predicted_demand"])
+
+
+def test_outcome_manual_entry_overrides_backtest_derivation(client):
+    fc = client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.post(f"/api/v1/recommendations/{rec['id']}/outcome", json={"actual_demand_observed": 999.0})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "LIVE"
+    assert body["kind"] == "manual"
+    assert body["actual_demand_observed"] == 999.0
+
+
+def test_outcome_negative_value_rejected(client):
+    fc = client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.post(f"/api/v1/recommendations/{rec['id']}/outcome", json={"actual_demand_observed": -5.0})
+    assert r.status_code == 422
+
+
+def test_outcome_invalid_recommendation_id_404(client):
+    r = client.get("/api/v1/recommendations/999999/outcome")
+    assert r.status_code == 404
+
+
+def test_baseline_pending_when_no_seasonal_naive_run_exists(client):
+    """A brand-new series/horizon combo with only a lightgbm run has no
+    seasonal-naive baseline on file yet -- must be honest PENDING, not a
+    silently-run comparison."""
+    fc = client.post(
+        "/api/v1/forecast",
+        json={"model": "lightgbm", "series_id": "FOODS_3_090_CA_1_evaluation", "horizon": 21},
+    ).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.get(f"/api/v1/recommendations/{rec['id']}/baseline")
+    assert r.status_code == 200
+    assert r.json()["status"] == "PENDING"
+
+
+def test_baseline_live_when_seasonal_naive_run_exists_same_series_horizon(client):
+    client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14})
+    fc = client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.get(f"/api/v1/recommendations/{rec['id']}/baseline")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "LIVE"
+    assert body["baseline"]["model"] == "seasonal_naive"
+    assert body["decision"]["model"] == "lightgbm"
+    assert body["baseline"]["financial_metric"]["status"] == "ILLUSTRATIVE"
+
+
+def test_baseline_own_model_is_the_baseline_returns_pending(client):
+    fc = client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14}).json()
+    rec = client.post("/api/v1/recommend", json={"forecast_run_id": fc["id"]}).json()
+    r = client.get(f"/api/v1/recommendations/{rec['id']}/baseline")
+    assert r.status_code == 200
+    assert r.json()["status"] == "PENDING"
+
+
+def test_accuracy_vs_outcome_pending_with_fewer_than_two_models(client, db_session):
+    r = client.get("/api/v1/research/accuracy-vs-outcome?series_id=NO_SUCH_SERIES_ID_YET")
+    assert r.status_code == 200
+    assert r.json()["status"] == "PENDING"
+    assert "PENDING" in r.json()["note"]
+
+
+def test_accuracy_vs_outcome_live_with_two_completed_models(client):
+    client.post("/api/v1/forecast", json={"model": "seasonal_naive", "horizon": 14})
+    client.post("/api/v1/forecast", json={"model": "lightgbm", "horizon": 14})
+    r = client.get("/api/v1/research/accuracy-vs-outcome?series_id=FOODS_3_090_CA_1_evaluation")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] in ("LIVE", "RESEARCH")
+    assert len(body["points"]) >= 2
+    models = {p["model"] for p in body["points"]}
+    assert {"seasonal_naive", "lightgbm"} <= models
+    for p in body["points"]:
+        assert p["financial_status"] == "ILLUSTRATIVE"

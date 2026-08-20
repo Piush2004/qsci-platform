@@ -113,6 +113,7 @@ class RecommendationResponse(BaseModel):
     sku_id: str
     status: str
     created_at: datetime
+    forecast_run_id: int | None = None
     forecast_p10: float
     forecast_p50: float
     forecast_p90: float
@@ -143,6 +144,19 @@ class ApprovalActionRequest(BaseModel):
     def _finite_qty(cls, v: float | None) -> float | None:
         if v is not None and not math.isfinite(v):
             raise ValueError(f"modified_qty must be finite, got {v}")
+        return v
+
+
+class OutcomeRequest(BaseModel):
+    actual_qty_ordered: float | None = Field(default=None, ge=0)
+    actual_demand_observed: float | None = Field(default=None, ge=0)
+    notes: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("actual_qty_ordered", "actual_demand_observed")
+    @classmethod
+    def _finite(cls, v: float | None) -> float | None:
+        if v is not None and not math.isfinite(v):
+            raise ValueError(f"value must be finite, got {v}")
         return v
 
 

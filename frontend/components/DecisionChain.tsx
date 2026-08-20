@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AuditEvent, Recommendation } from "@/lib/api";
+import type { AuditEvent, OutcomeResult, Recommendation } from "@/lib/api";
 import { StatusPill } from "./StatusPill";
 import { Card } from "./Card";
 
@@ -19,7 +19,15 @@ function fmt(n: number, digits = 1) {
 /** Every stage's detail is derived directly from the real Recommendation /
  * AuditEvent objects passed in -- clicking a stage reveals actual backend
  * evidence, never a hardcoded placeholder. */
-export function DecisionChain({ rec, auditEvents }: { rec: Recommendation; auditEvents: AuditEvent[] }) {
+export function DecisionChain({
+  rec,
+  auditEvents,
+  outcome,
+}: {
+  rec: Recommendation;
+  auditEvents: AuditEvent[];
+  outcome?: OutcomeResult | null;
+}) {
   const [open, setOpen] = useState<string | null>("recommendation");
 
   const decisionEvent = auditEvents.find((e) => e.event_type.startsWith("APPROVAL_"));
@@ -106,6 +114,23 @@ export function DecisionChain({ rec, auditEvents }: { rec: Recommendation; audit
           ))}
         </ul>
       ),
+    },
+    {
+      key: "outcome",
+      title: "Outcome",
+      status: outcome === undefined ? "PENDING" : outcome === null ? "PENDING" : outcome.status,
+      detail:
+        outcome == null ? (
+          <p className="text-muted">Awaiting outcome data.</p>
+        ) : outcome.status === "PENDING" ? (
+          <p className="text-muted">{outcome.note}</p>
+        ) : (
+          <p>
+            Predicted {fmt(outcome.predicted_demand ?? 0)} vs. actual{" "}
+            {fmt((outcome.kind === "manual" ? outcome.actual_demand_observed : outcome.actual_demand) ?? 0)} —{" "}
+            {outcome.note}
+          </p>
+        ),
     },
   ];
 

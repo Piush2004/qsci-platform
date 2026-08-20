@@ -108,3 +108,37 @@ Milestone 0's "mobile (390×844)" testing used `chrome-devtools__resize_page(390
 
 - True 390×844 mobile testing could not be performed this milestone due to the tooling floor described above — flagged for follow-up if resolved in a future session.
 - Tablet (768×1024) re-verification not repeated this milestone (same tooling floor prevented an exact 768px target; the desktop pass already covers the `lg` breakpoint transition).
+
+## Milestone 3 — Outcome & Financial Decision Intelligence
+
+**Tooling note**: unlike Milestone 2, `emulate({viewport: "390x844x2,mobile,touch"})` produced a genuine `window.innerWidth === 390` this session (confirmed via `evaluate_script` before every mobile screenshot below) — the environment floor from Milestone 2 did not reproduce. All Milestone 3 mobile findings are true 390px, not the ~516px fallback.
+
+### Desktop (1440×900)
+
+| Page/State | Result |
+|---|---|
+| `/dashboard`, list | PASS — `DecisionCard` renders SKU/status/forecast/order/risk/confidence/illustrative-impact for every recommendation, replacing the old plain-button rows. |
+| `/dashboard`, detail pane, PENDING recommendation with a linked forecast run | PASS — full Step 8 hierarchy renders in order: DecisionChain (10 stages incl. new Outcome) → WhyPanel → BaselineComparisonCard (LIVE, real seasonal_naive-vs-lightgbm wMAPE/reorder_point/total_cost) → ConfidenceExplainer (grounded in this recommendation's real 41-point-spread decomposition) → RiskExplainer (real reorder-point/spread-derived explanation) → approve/modify/reject → OutcomeSection. |
+| `/dashboard`, approve flow | PASS — filled approver, clicked Approve, DecisionChain's Human Decision stage flipped PENDING→LIVE, action buttons disappeared, list re-sorted, Outcome section persisted through the refetch. Backend-confirmed (not optimistic UI). |
+| `/dashboard`, pre-Milestone-3 recommendation (`forecast_run_id=null`) | PASS — Outcome and Baseline both render honest PENDING with a specific explanation ("created before Milestone 3 linked recommendations to their originating forecast run"), never a fabricated actual. |
+| `/research`, accuracy-vs-outcome scatter | PASS (after 1 fix) — 3 real points (seasonal_naive, lightgbm, vqr) plotted from real wMAPE/total_cost pairs. |
+
+### Real bug found and fixed
+
+`AccuracyOutcomeScatter`'s point label ran past the SVG's right edge when a point's wMAPE was the largest in the set (VQR's 390% wMAPE sits far right of the other two real models) — the "vqr" label was clipped off-canvas. Fixed: labels within 60px of the right edge now render left of their point with `text-anchor="end"` instead of right of it. Re-verified: "vqr" fully visible.
+
+### Mobile (true 390×844)
+
+| Page/State | Result |
+|---|---|
+| `/dashboard`, list | PASS — `DecisionCard`s stack full-width, all fields legible, no truncation. |
+| `/dashboard`, detail pane, confidence decomposition | PASS — 2×2 grid unchanged from Milestone 1, still clean at 390px. |
+| `/dashboard`, `RiskExplainer`'s `<dl>` | PASS — label/value pairs wrap to a second line instead of clipping (`flex justify-between` on a narrow row), no horizontal overflow. |
+| `/dashboard`, `BaselineComparisonCard`'s table | PASS — `min-w-[420px]` inside `overflow-x-auto` triggers a visible horizontal scrollbar; all three rows (wMAPE/reorder_point/total_cost) fully legible when scrolled, no page-level overflow. |
+| `/dashboard`, `OutcomeSection` | PASS — real backtest-actual values (predicted 64 / actual 53.6 / error −10.4, −19.3%) render in a 3-column grid that stays legible at 390px. |
+| `/inventory` | PASS — no regression; table's own `overflow-x-auto` scroll unaffected by this milestone's changes. |
+
+### Known Visual Gaps (Carried Forward)
+
+- No formal WCAG 2.2 AA pass — spot-checked only (see Accessibility section of the Milestone 3 implementation log entry).
+- `/optimization`'s true-390px re-verification not repeated this milestone (no code in that page changed; Milestone 2's ~516px-floor findings still stand as the last direct evidence for that page specifically).

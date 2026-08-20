@@ -114,6 +114,7 @@ export interface Recommendation {
   sku_id: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "MODIFIED";
   created_at: string;
+  forecast_run_id: number | null;
   forecast_p10: number;
   forecast_p50: number;
   forecast_p90: number;
@@ -125,6 +126,56 @@ export interface Recommendation {
   confidence_breakdown: ConfidenceBreakdown;
   financial_impact: Record<string, unknown>;
   rationale: string;
+}
+
+export interface OutcomeResult {
+  status: "LIVE" | "PENDING";
+  kind: "backtest_actual" | "manual" | null;
+  note: string;
+  predicted_demand?: number;
+  actual_demand?: number;
+  actual_qty_ordered?: number | null;
+  actual_demand_observed?: number | null;
+  error?: number | null;
+  pct_error?: number | null;
+  horizon_days?: number;
+  series_id?: string;
+  recorded_at?: string;
+  notes?: string | null;
+}
+
+export interface BaselineMetric {
+  name: string;
+  value: number | null;
+  status?: string;
+}
+
+export interface BaselineSide {
+  model: string;
+  forecast_metric: BaselineMetric;
+  operational_metric: BaselineMetric;
+  financial_metric: BaselineMetric;
+}
+
+export interface BaselineComparison {
+  status: "LIVE" | "PENDING";
+  note: string;
+  baseline?: BaselineSide;
+  decision?: BaselineSide;
+}
+
+export interface AccuracyOutcomePoint {
+  model: string;
+  label: string;
+  wmape: number;
+  total_cost: number | null;
+  financial_status: string;
+}
+
+export interface AccuracyVsOutcome {
+  status: "LIVE" | "RESEARCH" | "PENDING";
+  note: string;
+  points: AccuracyOutcomePoint[];
 }
 
 export interface AuditEvent {
@@ -189,8 +240,22 @@ export const api = {
   audit: (recommendationId?: number) =>
     request<AuditEvent[]>(`/audit${recommendationId ? `?recommendation_id=${recommendationId}` : ""}`),
 
+  getOutcome: (id: number) => request<OutcomeResult>(`/recommendations/${id}/outcome`),
+  recordOutcome: (id: number, actualDemandObserved?: number, actualQtyOrdered?: number, notes?: string) =>
+    request<OutcomeResult>(`/recommendations/${id}/outcome`, {
+      method: "POST",
+      body: JSON.stringify({
+        actual_demand_observed: actualDemandObserved,
+        actual_qty_ordered: actualQtyOrdered,
+        notes,
+      }),
+    }),
+  getBaseline: (id: number) => request<BaselineComparison>(`/recommendations/${id}/baseline`),
+
   researchBenchmarks: () => request<Record<string, unknown>>("/research/benchmarks"),
   researchExperiments: () => request<Record<string, unknown>>("/research/experiments"),
   researchScalability: () => request<Record<string, unknown>>("/research/scalability"),
   researchNoise: () => request<Record<string, unknown>>("/research/noise"),
+  researchAccuracyVsOutcome: (seriesId?: string) =>
+    request<AccuracyVsOutcome>(`/research/accuracy-vs-outcome${seriesId ? `?series_id=${seriesId}` : ""}`),
 };

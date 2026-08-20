@@ -74,3 +74,25 @@ Status: **PARTIAL** — covers the Golden Path surface built so far (dashboard, 
 ### Environment note (mobile tooling)
 
 Neither `resize_page` nor `emulate({viewport: "390x844..."})` produced a true 390px `window.innerWidth` in this session (floored at ~516px regardless of requested size) — this did not reproduce Milestone 1's documented true-390px method. All Milestone 2 "mobile" verification above was done at the achievable ~516px width and is reported as such, not claimed at 390px.
+
+## Milestone 3 — Outcome & Financial Decision Intelligence
+
+| Location | Element | Action | Expected | Actual | API | Status | Evidence |
+|---|---|---|---|---|---|---|---|
+| `/dashboard` | `DecisionCard` (list) | Click | Selects the recommendation, loads full detail pane | Works — real SKU/forecast/order/risk/confidence/impact shown on the card itself | `/recommendations` | PASS | Snapshot, this session |
+| `/dashboard` | `GET /recommendations/{id}/outcome` on select | Auto-fetch | Real backtest actual for a linked run, honest PENDING otherwise | LIVE: predicted 64.0 vs. actual 53.6 (M5 real held-out sales), error −10.4 (−19.3%); PENDING for pre-Milestone-3 recs (no `forecast_run_id`) | `/recommendations/{id}/outcome` | PASS | `curl` + snapshot, this session |
+| `/dashboard` | `POST /recommendations/{id}/outcome` (manual entry) | POST | Overrides the backtest-derived figure, `kind:"manual"` | `{"actual_demand_observed":999.0}` → returned `kind:"manual"`, `error:934.99` | `/recommendations/{id}/outcome` | PASS | `curl`, this session |
+| `/dashboard` | `POST /recommendations/{id}/outcome`, negative value | POST | 422 | `{"detail":[{"type":"greater_than_equal", ...}]}`, HTTP 422 | `/recommendations/{id}/outcome` | PASS | `curl`, this session |
+| `/dashboard` | `GET /recommendations/{id}/baseline` on select | Auto-fetch | LIVE comparison when a same-series/horizon seasonal_naive run exists, PENDING otherwise | LIVE: seasonal_naive wMAPE 37.2/reorder_point 207.4/cost 3,550.7 vs. lightgbm wMAPE 25.6/reorder_point 217/cost 1,463.6, both ILLUSTRATIVE-labeled | `/recommendations/{id}/baseline` | PASS | `curl` + snapshot, this session |
+| `/dashboard` | Approve (recommendation with real outcome/baseline attached) | Click | Backend-confirmed status change, DecisionChain's Human Decision stage LIVE, Outcome/Baseline persist through refetch | Works — status PENDING→APPROVED, list re-sorts, action buttons disappear | `/recommendations/{id}/approve` | PASS | Snapshot, this session |
+| `/research` | Accuracy-vs-outcome scatter | Render | Real per-model (wMAPE, total_cost) points, PENDING below 2 models | 3 real points (seasonal_naive/lightgbm/vqr) from `GET /research/accuracy-vs-outcome` | `/research/accuracy-vs-outcome` | PASS (after 1 fix — see below) | Screenshot, this session |
+| `/research/accuracy-vs-outcome` | unknown series_id | `GET` | PENDING, empty points | `{"status":"PENDING","points":[]}` | `/research/accuracy-vs-outcome?series_id=BOGUS_SERIES` | PASS | `curl`, this session |
+| `/recommendations/{id}/outcome`, `/baseline` | invalid recommendation id | `GET` | 404 | `{"detail":"no recommendation with id=999999"}`, HTTP 404 (both endpoints) | — | PASS | `curl`, this session |
+
+### Real bugs found and fixed this milestone
+
+1. **Accuracy-vs-outcome scatter label clipped** — the point with the largest wMAPE (VQR, 390%) placed its text label past the SVG's right edge, rendering it invisible. Fixed: labels within 60px of the right edge flip to render left of their point with `text-anchor="end"`.
+
+### Environment note (mobile tooling) — resolved this milestone
+
+Unlike Milestone 2, `emulate({viewport: "390x844x2,mobile,touch"})` produced a genuine `window.innerWidth === 390` this session (confirmed before every mobile screenshot) — the ~516px floor observed in Milestone 2 did not reproduce. All Milestone 3 mobile rows above (see `docs/QSCI_VISUAL_QA_REPORT.md`'s Milestone 3 section) are true 390px, not a fallback width.

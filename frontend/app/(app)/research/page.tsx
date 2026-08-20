@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type AccuracyVsOutcome } from "@/lib/api";
 import { StatusPill } from "@/components/StatusPill";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/Card";
+import { AccuracyOutcomeScatter } from "@/components/AccuracyOutcomeScatter";
 
 type Json = Record<string, unknown>;
 
@@ -24,14 +25,18 @@ export default function ResearchPage() {
   const [benchmarks, setBenchmarks] = useState<Json | null>(null);
   const [scalability, setScalability] = useState<Json | null>(null);
   const [noise, setNoise] = useState<Json | null>(null);
+  const [accuracyVsOutcome, setAccuracyVsOutcome] = useState<AccuracyVsOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.researchBenchmarks(), api.researchScalability(), api.researchNoise()])
-      .then(([b, s, n]) => {
+    Promise.all([
+      api.researchBenchmarks(), api.researchScalability(), api.researchNoise(), api.researchAccuracyVsOutcome(),
+    ])
+      .then(([b, s, n, a]) => {
         setBenchmarks(b);
         setScalability(s);
         setNoise(n);
+        setAccuracyVsOutcome(a);
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : "Backend unavailable"));
   }, []);
@@ -84,6 +89,20 @@ export default function ResearchPage() {
           <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-background/60 p-2 text-xs">
             {JSON.stringify(noise?.noise_sensitivity, null, 2)}
           </pre>
+        </Section>
+
+        <Section title="Forecast accuracy vs. business outcome (RQ2/H2)" status={accuracyVsOutcome?.status ?? "PENDING"}>
+          <p className="mb-2 text-sm text-muted">
+            {accuracyVsOutcome?.note ?? "Loading…"}
+          </p>
+          {accuracyVsOutcome && accuracyVsOutcome.points.length >= 2 ? (
+            <AccuracyOutcomeScatter points={accuracyVsOutcome.points} />
+          ) : (
+            <p className="text-sm text-pending">
+              PENDING — paired business-outcome experiment. Run at least two forecast models (e.g. Seasonal Naive
+              and LightGBM) on /demand for the same series to populate this chart.
+            </p>
+          )}
         </Section>
 
         <Section title="Known limitations" status="PENDING">
