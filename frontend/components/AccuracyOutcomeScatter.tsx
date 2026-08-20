@@ -57,27 +57,30 @@ export function AccuracyOutcomeScatter({ points }: { points: AccuracyOutcomePoin
           );
         })}
       </svg>
-      <table className="sr-only">
-        <caption>Forecast accuracy vs. financial impact per model (textual equivalent)</caption>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>wMAPE (%)</th>
-            <th>Total cost ($/yr)</th>
-            <th>Evidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((p) => (
-            <tr key={p.model}>
-              <td>{p.model}</td>
-              <td>{p.wmape}</td>
-              <td>{p.total_cost ?? "N/A"}</td>
-              <td>{p.label}</td>
+      {/* sr-only on a wrapping div, not the table itself -- see ScalabilityChart. */}
+      <div className="sr-only">
+        <table>
+          <caption>Forecast accuracy vs. financial impact per model (textual equivalent)</caption>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>wMAPE (%)</th>
+              <th>Total cost ($/yr)</th>
+              <th>Evidence</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map((p) => (
+              <tr key={p.model}>
+                <td>{p.model}</td>
+                <td>{p.wmape}</td>
+                <td>{p.total_cost ?? "N/A"}</td>
+                <td>{p.label}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -68,27 +68,33 @@ export function ScalabilityChart({ title, xLabel, yLabel, series, yDomain }: Sca
           </span>
         ))}
       </div>
-      <table className="sr-only">
-        <caption>{title} (textual equivalent)</caption>
-        <thead>
-          <tr>
-            <th>Series</th>
-            <th>{xLabel}</th>
-            <th>{yLabel}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {series.flatMap((s) =>
-            s.points.map((p, pi) => (
-              <tr key={`${s.label}-${pi}`}>
-                <td>{s.label}</td>
-                <td>{p.x}</td>
-                <td>{p.y}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      {/* sr-only on a wrapping div, not the table itself -- a <table>'s own
+          intrinsic layout width can escape a 1px/clip constraint applied
+          directly to it in some browsers, inflating the document's
+          scrollable width even though the table is visually invisible. */}
+      <div className="sr-only">
+        <table>
+          <caption>{title} (textual equivalent)</caption>
+          <thead>
+            <tr>
+              <th>Series</th>
+              <th>{xLabel}</th>
+              <th>{yLabel}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {series.flatMap((s) =>
+              s.points.map((p, pi) => (
+                <tr key={`${s.label}-${pi}`}>
+                  <td>{s.label}</td>
+                  <td>{p.x}</td>
+                  <td>{p.y}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

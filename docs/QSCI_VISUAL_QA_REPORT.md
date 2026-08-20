@@ -142,3 +142,38 @@ Milestone 0's "mobile (390×844)" testing used `chrome-devtools__resize_page(390
 
 - No formal WCAG 2.2 AA pass — spot-checked only (see Accessibility section of the Milestone 3 implementation log entry).
 - `/optimization`'s true-390px re-verification not repeated this milestone (no code in that page changed; Milestone 2's ~516px-floor findings still stand as the last direct evidence for that page specifically).
+
+## Presentation-Readiness Pass — Landing Page + Cross-App Polish
+
+Scope: user-directed "Track 1" (polish + harden existing pages, no new routes). Real backend at port 8010, real frontend at port 3001 throughout.
+
+### Landing page (`/`)
+
+| Viewport | Result |
+|---|---|
+| 1440×900 | PASS — all 12 sections render (Hero, Problem, Decision Chain, Real Data Evidence, Classical vs. Quantum forecasting, Classical vs. quantum-inspired routing, Financial Impact, Explainability, Research Questions, Architecture, Evidence Standard, CTA), correct heading hierarchy (h1→h2 throughout, verified via accessibility snapshot), no console errors, `docScrollWidth === innerWidth` (no overflow). |
+| 390×844 (true) | PASS — hero/pipeline pills wrap cleanly, dataset cards stack full-width, comparison tables scroll horizontally inside their own `overflow-x-auto` container rather than clipping, no page-level overflow. |
+| Keyboard/focus | PASS — links keep the browser's native `:focus-visible` outline (not suppressed by any CSS), confirmed via `getComputedStyle` on a programmatically-focused link (`outlineStyle: "auto"`). |
+
+All landing-page figures are real, sourced from `GET /research/benchmarks` and previously-verified Phase 0/3 dataset facts (M5 series count/date range, CVRPLIB instance count, Amazon Last-Mile route/stop counts) — none invented for this page.
+
+### Real bug found and fixed (cross-cutting, affected 3 components)
+
+**`sr-only` applied directly to a `<table>` element can inflate the document's scrollable width even though the table is visually invisible.** A `<table>`'s intrinsic layout-width calculation doesn't reliably respect the `width:1px`/`clip:rect(0,0,0,0)` constraints Tailwind's `sr-only` utility applies directly to it in all browsers — found via `document.documentElement.scrollWidth` (799px) exceeding `innerWidth` (768px) on `/optimization` at tablet width, even though `document.body.scrollWidth` (753px) showed no overflow and nothing was visually clipped. Root-caused with a `getBoundingClientRect()` sweep of every element, which found a `TABLE.sr-only` with `right: 799.25`.
+
+Affected: `ScalabilityChart.tsx`, `RouteVisualization.tsx`, `AccuracyOutcomeScatter.tsx` — all three ship an `sr-only` textual-table equivalent alongside their SVG. Fixed identically in all three: `sr-only` moved to a wrapping `<div>`, the `<table>` itself carries no class. Re-verified: `/optimization` at 768px now reports `docScrollWidth: 753` (was 799); re-verified at 390px both before and after triggering a live run (so `RouteVisualization`'s table is actually present in the DOM), and on `/research` (`AccuracyOutcomeScatter`) at both breakpoints — all clean.
+
+### Cross-app overflow sweep (`docScrollWidth === innerWidth` check)
+
+| Page | 768×1024 | 390×844 (true) |
+|---|---|---|
+| `/` | 753/768 PASS | 390/390 PASS |
+| `/dashboard` (detail pane loaded) | 753/768 PASS | 390/390 PASS |
+| `/demand` | 768/768 PASS | 390/390 PASS |
+| `/inventory` | 768/768 PASS | 390/390 PASS |
+| `/optimization` (incl. a live run + rendered route) | 753/768 PASS (after fix) | 390/390 PASS (after fix) |
+| `/research` | 753/768 PASS | 390/390 PASS |
+
+### Regression check
+
+All 6 routes reloaded and checked for console errors after the landing-page rewrite and the `sr-only` fix — none found on any page.

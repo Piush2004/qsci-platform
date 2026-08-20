@@ -96,3 +96,34 @@ Neither `resize_page` nor `emulate({viewport: "390x844..."})` produced a true 39
 ### Environment note (mobile tooling) — resolved this milestone
 
 Unlike Milestone 2, `emulate({viewport: "390x844x2,mobile,touch"})` produced a genuine `window.innerWidth === 390` this session (confirmed before every mobile screenshot) — the ~516px floor observed in Milestone 2 did not reproduce. All Milestone 3 mobile rows above (see `docs/QSCI_VISUAL_QA_REPORT.md`'s Milestone 3 section) are true 390px, not a fallback width.
+
+## Presentation-Readiness Pass — Golden Path + Adversarial
+
+| Location | Element | Action | Expected | Actual | API | Status | Evidence |
+|---|---|---|---|---|---|---|---|
+| Golden Path | Forecast → Recommend → Outcome → Baseline → Approve → Audit, one continuous run | `curl` sequence | Every stage real, backend-confirmed | forecast run 10 → recommendation 7 (wMAPE-backed reorder point 217.0) → outcome LIVE (predicted 64.0 vs. real M5 actual 53.6) → baseline LIVE (seasonal_naive $3,550.7 vs. lightgbm $1,463.6) → approve → APPROVED → audit shows both RECOMMENDATION_CREATED and APPROVAL_APPROVE events | `/forecast`, `/recommend`, `/recommendations/{id}/{outcome,baseline,approve}`, `/audit` | PASS | `curl` transcript, this session |
+| `/recommendations/{id}/approve` | duplicate approval | POST twice | 2nd call 409 | `{"detail":"recommendation 7 already decided (status=APPROVED)..."}`, HTTP 409 | — | PASS | `curl`, this session |
+| `/recommendations/{id}/reject` | reject an already-approved recommendation | POST | 409 (invalid state transition) | same 409 as above | — | PASS | `curl`, this session |
+| `/recommendations/{id}/modify` | no `modified_qty` | POST | 422 | `{"detail":"modified_qty is required for a MODIFY decision"}` | — | PASS | `curl`, this session |
+| `/recommendations/{id}/modify` | negative `modified_qty` | POST `-5` | 422 | Pydantic `greater_than_equal` error | — | PASS | `curl`, this session |
+| `/recommendations/{id}/modify` | huge `modified_qty` (999999999) | POST | 200, persisted as a real human override | `status:"MODIFIED"`, qty persisted verbatim — no artificial cap (a human is entitled to override with any non-negative finite quantity) | — | PASS | `curl`, this session |
+| `/recommendations/{id}/modify` | infinite `modified_qty` | POST `Infinity` | 422, no 500 crash | `{"detail":[{"type":"value_error","msg":"modified_qty must be finite, got inf"}]}` — confirms Milestone 1's non-finite-float exception handler still works | — | PASS | `curl`, this session |
+| `/recommendations/999999` | invalid id | GET | 404 | `{"detail":"no recommendation with id=999999"}` | — | PASS | `curl`, this session |
+| `/recommend` | invalid `forecast_run_id` | POST `999999` | 422 | `{"detail":"no forecast run with id=999999"}` | — | PASS | `curl`, this session |
+| `/optimize/instances/BOGUS` | invalid instance | GET | 404 | `{"detail":"unknown CVRPLIB instance 'BOGUS'..."}` | — | PASS | `curl`, this session |
+| `/forecast` | malformed JSON body | POST `not json` | 422 | `{"detail":[{"type":"json_invalid",...}]}` | — | PASS | `curl`, this session |
+| `/dashboard` | backend killed, page reloaded | reload | Honest "Backend unavailable" alert, 0 pending, no fabricated data | Confirmed via accessibility snapshot: `alert` role with text "Backend unavailable", "DECISIONS REQUIRING ATTENTION (0 PENDING)" | — | PASS | Snapshot, this session |
+| `/dashboard` | backend restarted, page reloaded | reload | Recovers automatically, no stuck error state | `document.body.innerText` no longer contains "Backend unavailable" | — | PASS | `evaluate_script`, this session |
+| `/` (new landing page) | "Open Decision Center" (hero + header + CTA, 3 instances) | Click | Navigates to `/dashboard` | All 3 confirmed as real `<a href="/dashboard">` in the accessibility tree | — | PASS | Snapshot, this session |
+| `/` | "See the Research Evidence" / "Research Lab" (2 instances) | Click | Navigates to `/research` | Confirmed as real links in the accessibility tree | — | PASS | Snapshot, this session |
+| `/optimization` | live "Run OR-Tools (on QUBO)" at 390px | Click | Route section appears with a rendered SVG map + textual table, no page overflow | Cost 380.01, feasible, Route section rendered, `docScrollWidth === innerWidth === 390` | `/optimize` | PASS | Snapshot + `evaluate_script`, this session |
+
+### Real bug found and fixed
+
+See `docs/QSCI_VISUAL_QA_REPORT.md`'s Presentation-Readiness Pass section — `sr-only` applied directly to a `<table>` inflated `document.documentElement.scrollWidth` past the viewport on `/optimization` at 768px (799 vs. 768), even though nothing was visually clipped. Fixed in `ScalabilityChart.tsx`, `RouteVisualization.tsx`, and `AccuracyOutcomeScatter.tsx` by moving `sr-only` to a wrapping `<div>`.
+
+### Automated tests (final regression, this pass)
+
+- `npx tsc --noEmit`: 0 errors. `npm run lint`: 0 errors. `npm run build`: succeeds, all 6 routes.
+- `backend/tests/`: 60/60 passed (1766.1s / 29m 26s — VQR-heavy tests dominate runtime).
+- Root `tests/` (qsci_core): 176 passed, 1 xfailed — unchanged baseline, zero regressions.

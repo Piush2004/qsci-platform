@@ -85,23 +85,26 @@ export function RouteVisualization({ depot, nodes, routes }: RouteVisualizationP
         highlight it.
       </p>
 
-      <table className="sr-only">
-        <caption>Route assignments (textual equivalent of the map above)</caption>
-        <thead>
-          <tr>
-            <th>Route</th>
-            <th>Stops (customer index, visit order)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {routes.map((route, ri) => (
-            <tr key={ri}>
-              <td>Route {ri + 1}</td>
-              <td>{route.join(", ")}</td>
+      {/* sr-only on a wrapping div, not the table itself -- see ScalabilityChart. */}
+      <div className="sr-only">
+        <table>
+          <caption>Route assignments (textual equivalent of the map above)</caption>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Stops (customer index, visit order)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {routes.map((route, ri) => (
+              <tr key={ri}>
+                <td>Route {ri + 1}</td>
+                <td>{route.join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
